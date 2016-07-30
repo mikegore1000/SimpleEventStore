@@ -18,7 +18,10 @@ namespace SimpleEventStore.Tests
 
             await subject.AppendToStream(streamId, @event);
 
-            Assert.That(engine.GetEventsForStream(streamId).Single(), Is.EqualTo(@event));
+            var stream = engine.GetEventsForStream(streamId);
+
+            Assert.That(stream.Count, Is.EqualTo(1));
+            Assert.That(stream.Single(), Is.EqualTo(@event));
         }
 
         public class OrderCreated
