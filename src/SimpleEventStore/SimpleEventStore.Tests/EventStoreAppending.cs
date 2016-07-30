@@ -80,5 +80,6 @@ namespace SimpleEventStore.Tests
 
         // TODO: Append features to finish
         // 1. Shouldn't allow writing to the "$all" stream
+        // 2. Allow writing multiple events
     }
 }
