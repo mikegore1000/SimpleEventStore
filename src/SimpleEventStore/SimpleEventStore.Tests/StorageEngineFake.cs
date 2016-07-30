@@ -34,12 +34,7 @@ namespace SimpleEventStore.Tests
 
         public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId)
         {
-            return Task.FromResult<IEnumerable<StorageEvent>>(GetEventsForStream(streamId));
-        }
-
-        private List<StorageEvent> GetEventsForStream(string streamId)
-        {
-            return streams[streamId];
+            return Task.FromResult<IEnumerable<StorageEvent>>(streams[streamId]);
         }
     }
 }
