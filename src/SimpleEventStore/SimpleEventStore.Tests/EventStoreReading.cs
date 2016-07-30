@@ -24,8 +24,8 @@ namespace SimpleEventStore.Tests
             engine = new StorageEngineFake();
             subject = new EventStore(engine);
 
-            await subject.AppendToStream(StreamId, new OrderCreated(StreamId), 0);
-            await subject.AppendToStream(StreamId, new OrderDispatched(StreamId), 1);
+            await subject.AppendToStream(StreamId, 0, new OrderCreated(StreamId));
+            await subject.AppendToStream(StreamId, 1, new OrderDispatched(StreamId));
         }
 
         [Test]

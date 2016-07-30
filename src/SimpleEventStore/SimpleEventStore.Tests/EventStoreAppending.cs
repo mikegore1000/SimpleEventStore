@@ -25,7 +25,7 @@ namespace SimpleEventStore.Tests
         {
             var @event = new OrderCreated(StreamId);
 
-            await subject.AppendToStream(StreamId, @event, 0);
+            await subject.AppendToStream(StreamId, 0, @event);
 
             var stream = await engine.ReadStreamForwards(StreamId);
             Assert.That(stream.Count, Is.EqualTo(1));
@@ -37,11 +37,11 @@ namespace SimpleEventStore.Tests
         [Test]
         public async Task when_appending_to_an_existing_stream_the_events_are_saved()
         {
-            await subject.AppendToStream(StreamId, new OrderCreated(StreamId), 0);
+            await subject.AppendToStream(StreamId, 0, new OrderCreated(StreamId));
 
             var @event = new OrderDispatched(StreamId);
 
-            await subject.AppendToStream(StreamId, @event, 1);
+            await subject.AppendToStream(StreamId, 1, @event);
 
             var stream = await engine.ReadStreamForwards(StreamId);
 
@@ -56,18 +56,18 @@ namespace SimpleEventStore.Tests
         {
             var @event = new OrderDispatched(StreamId);
 
-            Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, @event, expectedVersion));
+            Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
         }
 
         [TestCase(0)]
         [TestCase(2)]
         public async Task when_appending_to_an_existing_stream_with_an_unexpected_version_a_concurrency_error_is_thrown(int expectedVersion)
         {
-            await subject.AppendToStream(StreamId, new OrderCreated(StreamId), 0);
+            await subject.AppendToStream(StreamId, 0, new OrderCreated(StreamId));
 
             var @event = new OrderDispatched(StreamId);
 
-            Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, @event, expectedVersion));
+            Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
         }
 
         [TestCase(null)]
@@ -75,7 +75,7 @@ namespace SimpleEventStore.Tests
         [TestCase(" ")]
         public void when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
-            Assert.ThrowsAsync<ArgumentException>(async () => await subject.AppendToStream(streamId, new OrderCreated(streamId), 0));
+            Assert.ThrowsAsync<ArgumentException>(async () => await subject.AppendToStream(streamId, 0, new OrderCreated(streamId)));
         }
 
         // TODO: Append features to finish
