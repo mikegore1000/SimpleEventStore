@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore", "SimpleEventStore\SimpleEventStore.csproj", "{73235465-69BF-4762-B8C5-20C8E45795FF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CD241C9A-0A56-42C9-8309-D68890C78B64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore.Tests", "SimpleEventStore.Tests\SimpleEventStore.Tests.csproj", "{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{73235465-69BF-4762-B8C5-20C8E45795FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73235465-69BF-4762-B8C5-20C8E45795FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73235465-69BF-4762-B8C5-20C8E45795FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73235465-69BF-4762-B8C5-20C8E45795FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819} = {CD241C9A-0A56-42C9-8309-D68890C78B64}
+	EndGlobalSection
+EndGlobal
