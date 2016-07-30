@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using SimpleEventStore.Tests.Events;
@@ -67,6 +68,14 @@ namespace SimpleEventStore.Tests
             var @event = new OrderDispatched(StreamId);
 
             Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, @event, expectedVersion));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
+        public void when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
+        {
+            Assert.ThrowsAsync<ArgumentException>(async () => await subject.AppendToStream(streamId, new OrderCreated(streamId), 0));
         }
 
         // TODO: Append features to finish

@@ -1,3 +1,4 @@
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace SimpleEventStore
 
         public Task AppendToStream(string streamId, object @event, int expectedVersion)
         {
+            Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
+
             return engine.AppendToStream(streamId, new StorageEvent(streamId, @event, expectedVersion + 1));
         }
 
