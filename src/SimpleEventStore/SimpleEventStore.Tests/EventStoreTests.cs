@@ -21,7 +21,8 @@ namespace SimpleEventStore.Tests
             var stream = engine.GetEventsForStream(streamId);
 
             Assert.That(stream.Count, Is.EqualTo(1));
-            Assert.That(stream.Single(), Is.EqualTo(@event));
+            Assert.That(stream.Single().StreamId, Is.EqualTo(streamId));
+            Assert.That(stream.Single().EventBody, Is.EqualTo(@event));
         }
 
         public class OrderCreated
@@ -37,21 +38,21 @@ namespace SimpleEventStore.Tests
 
     internal class StorageEngineFake : IStorageEngine
     {
-        private readonly Dictionary<string, List<object>> streams = new Dictionary<string, List<object>>();
+        private readonly Dictionary<string, List<StorageEvent>> streams = new Dictionary<string, List<StorageEvent>>();
 
         public Task AppendToStream(string streamId, object @event)
         {
             if (!streams.ContainsKey(streamId))
             {
-                streams[streamId] = new List<object>();
+                streams[streamId] = new List<StorageEvent>();
             }
 
-            streams[streamId].Add(@event);
+            streams[streamId].Add(new StorageEvent(streamId, @event));
 
             return Task.FromResult(0);
         }
 
-        public List<object> GetEventsForStream(string streamId)
+        public List<StorageEvent> GetEventsForStream(string streamId)
         {
             return streams[streamId];
         }
