@@ -22,6 +22,7 @@ namespace SimpleEventStore.Tests
             Assert.That(stream.Count, Is.EqualTo(1));
             Assert.That(stream.Single().StreamId, Is.EqualTo(streamId));
             Assert.That(stream.Single().EventBody, Is.EqualTo(@event));
+            Assert.That(stream.Single().EventNumber, Is.EqualTo(1));
         }
 
         public class OrderCreated

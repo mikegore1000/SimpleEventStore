@@ -14,7 +14,7 @@ namespace SimpleEventStore.Tests
                 streams[streamId] = new List<StorageEvent>();
             }
 
-            streams[streamId].Add(new StorageEvent(streamId, @event));
+            streams[streamId].Add(new StorageEvent(streamId, @event, 1));
 
             return Task.FromResult(0);
         }

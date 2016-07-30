@@ -6,10 +6,13 @@
 
         public object EventBody { get; private set; }
 
-        public StorageEvent(string streamId, object eventBody)
+        public int EventNumber { get; private set; }
+
+        public StorageEvent(string streamId, object eventBody, int eventNumber)
         {
             StreamId = streamId;
             EventBody = eventBody;
+            EventNumber = eventNumber;
         }
     }
 }
