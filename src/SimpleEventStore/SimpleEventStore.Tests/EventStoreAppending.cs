@@ -26,7 +26,7 @@ namespace SimpleEventStore.Tests
 
             await subject.AppendToStream(StreamId, @event, 0);
 
-            var stream = engine.GetEventsForStream(StreamId);
+            var stream = await engine.ReadStreamForwards(StreamId);
             Assert.That(stream.Count, Is.EqualTo(1));
             Assert.That(stream.Single().StreamId, Is.EqualTo(StreamId));
             Assert.That(stream.Single().EventBody, Is.EqualTo(@event));
@@ -42,7 +42,7 @@ namespace SimpleEventStore.Tests
 
             await subject.AppendToStream(StreamId, @event, 1);
 
-            var stream = engine.GetEventsForStream(StreamId);
+            var stream = await engine.ReadStreamForwards(StreamId);
 
             Assert.That(stream.Count, Is.EqualTo(2));
             Assert.That(stream.Skip(1).Single().EventBody, Is.EqualTo(@event));

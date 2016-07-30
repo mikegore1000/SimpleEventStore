@@ -34,7 +34,7 @@ namespace SimpleEventStore.Tests
             return Task.FromResult<IEnumerable<StorageEvent>>(GetEventsForStream(streamId));
         }
 
-        public List<StorageEvent> GetEventsForStream(string streamId)
+        private List<StorageEvent> GetEventsForStream(string streamId)
         {
             return streams[streamId];
         }
