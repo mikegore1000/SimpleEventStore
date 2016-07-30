@@ -7,14 +7,14 @@ namespace SimpleEventStore.Tests
     {
         private readonly Dictionary<string, List<StorageEvent>> streams = new Dictionary<string, List<StorageEvent>>();
 
-        public Task AppendToStream(string streamId, object @event)
+        public Task AppendToStream(string streamId, StorageEvent @event)
         {
             if (!streams.ContainsKey(streamId))
             {
                 streams[streamId] = new List<StorageEvent>();
             }
 
-            streams[streamId].Add(new StorageEvent(streamId, @event, 1));
+            streams[streamId].Add(@event);
 
             return Task.FromResult(0);
         }

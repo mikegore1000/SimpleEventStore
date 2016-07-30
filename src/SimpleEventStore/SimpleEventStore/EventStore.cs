@@ -11,9 +11,9 @@ namespace SimpleEventStore
             this.engine = engine;
         }
 
-        public Task AppendToStream(string streamId, object @event)
+        public Task AppendToStream(string streamId, object @event, int expectedVersion)
         {
-            engine.AppendToStream(streamId, @event);
+            engine.AppendToStream(streamId, new StorageEvent(streamId, @event, expectedVersion + 1));
             return Task.FromResult(0);
         }
     }

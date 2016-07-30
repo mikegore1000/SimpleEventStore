@@ -4,6 +4,6 @@ namespace SimpleEventStore
 {
     public interface IStorageEngine
     {
-        Task AppendToStream(string streamId, object @event);
+        Task AppendToStream(string streamId, StorageEvent @event);
     }
 }
