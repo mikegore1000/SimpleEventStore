@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using SimpleEventStore.Tests.Events;
 
 namespace SimpleEventStore.Tests
 {
@@ -66,26 +67,6 @@ namespace SimpleEventStore.Tests
             var @event = new OrderDispatched(StreamId);
 
             Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, @event, expectedVersion));
-        }
-
-        public class OrderCreated
-        {
-            public string OrderId { get; private set; }
-
-            public OrderCreated(string orderId)
-            {
-                OrderId = orderId;
-            }
-        }
-
-        public class OrderDispatched
-        {
-            public string OrderId { get; private set; }
-
-            public OrderDispatched(string orderId)
-            {
-                OrderId = orderId;
-            }
         }
     }
 }

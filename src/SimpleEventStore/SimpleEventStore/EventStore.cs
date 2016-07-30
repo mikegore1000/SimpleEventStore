@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore
@@ -14,6 +16,11 @@ namespace SimpleEventStore
         public Task AppendToStream(string streamId, object @event, int expectedVersion)
         {
             return engine.AppendToStream(streamId, new StorageEvent(streamId, @event, expectedVersion + 1));
+        }
+
+        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId)
+        {
+            return engine.ReadStreamForwards(streamId);
         }
     }
 }
