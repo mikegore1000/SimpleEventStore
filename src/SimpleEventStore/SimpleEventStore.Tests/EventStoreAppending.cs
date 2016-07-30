@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace SimpleEventStore.Tests
 {
     [TestFixture]
-    public class EventStoreTests
+    public class EventStoreAppending
     {
         private const string StreamId = "TEST-ORDER";
         private StorageEngineFake engine;
