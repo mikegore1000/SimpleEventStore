@@ -8,6 +8,8 @@ namespace SimpleEventStore.Tests
     // TODO: Add the remaining features
     // 1. Allow a read from event version x to y
     // 2. Read an "$all" stream - requires a global checkpoint
+    // 3. Shouldn't allow reading from the "$all" stream id
+    // 4. Shouldn't allow reading for null & "" stream ids
 
     [TestFixture]
     public class EventStoreReading

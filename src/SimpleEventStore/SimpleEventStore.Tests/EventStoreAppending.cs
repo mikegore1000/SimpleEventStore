@@ -68,5 +68,8 @@ namespace SimpleEventStore.Tests
 
             Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, @event, expectedVersion));
         }
+
+        // TODO: Append features to finish
+        // 1. Shouldn't allow writing to the "$all" stream
     }
 }
