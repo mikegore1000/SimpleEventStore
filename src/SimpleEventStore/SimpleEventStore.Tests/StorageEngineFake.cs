@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore.Tests
@@ -9,7 +10,7 @@ namespace SimpleEventStore.Tests
     {
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
 
-        public Task AppendToStream(string streamId, StorageEvent @event)
+        public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
             return Task.Run(() =>
             {
@@ -18,13 +19,15 @@ namespace SimpleEventStore.Tests
                     streams[streamId] = new List<StorageEvent>();
                 }
 
-                if (@event.EventNumber - 1 == streams[streamId].Count)
+                var firstEvent = events.First();
+
+                if (firstEvent.EventNumber - 1 == streams[streamId].Count)
                 {
-                    streams[streamId].Add(@event);
+                    streams[streamId].AddRange(events);
                 }
                 else
                 {
-                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {@streamId}. Expected revision {@event.EventNumber} : Actual revision {streams[streamId].Count}");
+                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {@streamId}. Expected revision {firstEvent.EventNumber} : Actual revision {streams[streamId].Count}");
                 }
             });
         }

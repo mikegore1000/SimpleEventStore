@@ -21,7 +21,7 @@ namespace SimpleEventStore.Tests
         }
 
         [Test]
-        public async Task when_appending_to_a_new_stream_the_events_are_saved()
+        public async Task when_appending_to_a_new_stream_the_event_is_saved()
         {
             var @event = new OrderCreated(StreamId);
 
@@ -35,7 +35,7 @@ namespace SimpleEventStore.Tests
         }
 
         [Test]
-        public async Task when_appending_to_an_existing_stream_the_events_are_saved()
+        public async Task when_appending_to_an_existing_stream_the_event_is_saved()
         {
             await subject.AppendToStream(StreamId, 0, new OrderCreated(StreamId));
 
@@ -78,8 +78,23 @@ namespace SimpleEventStore.Tests
             Assert.ThrowsAsync<ArgumentException>(async () => await subject.AppendToStream(streamId, 0, new OrderCreated(streamId)));
         }
 
+        [Test]
+        public async Task when_appending_to_a_new_stream_with_multiple_events_then_they_are_saved()
+        {
+            var @events = new object[] { new OrderCreated(StreamId), new OrderDispatched(StreamId) };
+
+            await subject.AppendToStream(StreamId, 0, @events);
+
+            var savedEvents = await subject.ReadStreamForwards(StreamId);
+
+            Assert.That(savedEvents.Count(), Is.EqualTo(2));
+            Assert.That(savedEvents.First().StreamId, Is.EqualTo(StreamId));
+            Assert.That(savedEvents.First().EventNumber, Is.EqualTo(1));
+            Assert.That(savedEvents.Skip(1).Single().StreamId, Is.EqualTo(StreamId));
+            Assert.That(savedEvents.Skip(1).Single().EventNumber, Is.EqualTo(2));
+        }
+
         // TODO: Append features to finish
         // 1. Shouldn't allow writing to the "$all" stream
-        // 2. Allow writing multiple events
     }
 }

@@ -1,6 +1,7 @@
 using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore
@@ -14,11 +15,19 @@ namespace SimpleEventStore
             this.engine = engine;
         }
 
-        public Task AppendToStream(string streamId, int expectedVersion, object @event)
+        public Task AppendToStream(string streamId, int expectedVersion, params object[] events)
         {
             Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
 
-            return engine.AppendToStream(streamId, new StorageEvent(streamId, @event, expectedVersion + 1));
+            var storageEvents = new List<StorageEvent>();
+            var eventVersion = expectedVersion;
+
+            for (int i = 0; i < events.Length; i++)
+            {
+                storageEvents.Add(new StorageEvent(streamId, events[i], ++eventVersion));
+            }
+
+            return engine.AppendToStream(streamId, storageEvents);
         }
 
         public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId)
