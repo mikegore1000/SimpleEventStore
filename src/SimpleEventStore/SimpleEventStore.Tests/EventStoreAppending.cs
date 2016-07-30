@@ -73,6 +73,7 @@ namespace SimpleEventStore.Tests
         [TestCase(null)]
         [TestCase("")]
         [TestCase(" ")]
+        [TestCase("$all")]
         public void when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
             Assert.ThrowsAsync<ArgumentException>(async () => await subject.AppendToStream(streamId, 0, new OrderCreated(streamId)));
@@ -93,8 +94,5 @@ namespace SimpleEventStore.Tests
             Assert.That(savedEvents.Skip(1).Single().StreamId, Is.EqualTo(StreamId));
             Assert.That(savedEvents.Skip(1).Single().EventNumber, Is.EqualTo(2));
         }
-
-        // TODO: Append features to finish
-        // 1. Shouldn't allow writing to the "$all" stream
     }
 }

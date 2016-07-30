@@ -11,5 +11,15 @@ namespace SimpleEventStore
                 throw new ArgumentException("The value cannot be a null, empty string or contain only whitespace", paramName);
             }
         }
+
+        public static void IsNotNullOrEmptyOrAllStream(string paramName, string value)
+        {
+            IsNotNullOrEmpty(paramName, value);
+
+            if (value == "$all")
+            {
+                throw new ArgumentException("The value cannot be the $all stream", paramName);
+            }
+        }
     }
 }
