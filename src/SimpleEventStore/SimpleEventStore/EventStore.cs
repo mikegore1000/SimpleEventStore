@@ -13,8 +13,7 @@ namespace SimpleEventStore
 
         public Task AppendToStream(string streamId, object @event, int expectedVersion)
         {
-            engine.AppendToStream(streamId, new StorageEvent(streamId, @event, expectedVersion + 1));
-            return Task.FromResult(0);
+            return engine.AppendToStream(streamId, new StorageEvent(streamId, @event, expectedVersion + 1));
         }
     }
 }

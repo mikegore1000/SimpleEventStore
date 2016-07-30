@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -5,18 +7,26 @@ namespace SimpleEventStore.Tests
 {
     internal class StorageEngineFake : IStorageEngine
     {
-        private readonly Dictionary<string, List<StorageEvent>> streams = new Dictionary<string, List<StorageEvent>>();
+        private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
 
         public Task AppendToStream(string streamId, StorageEvent @event)
         {
-            if (!streams.ContainsKey(streamId))
+            return Task.Run(() =>
             {
-                streams[streamId] = new List<StorageEvent>();
-            }
+                if (!streams.ContainsKey(streamId))
+                {
+                    streams[streamId] = new List<StorageEvent>();
+                }
 
-            streams[streamId].Add(@event);
-
-            return Task.FromResult(0);
+                if (@event.EventNumber - 1 == streams[streamId].Count)
+                {
+                    streams[streamId].Add(@event);
+                }
+                else
+                {
+                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {@streamId}. Expected revision {@event.EventNumber} : Actual revision {streams[streamId].Count}");
+                }
+            });
         }
 
         public List<StorageEvent> GetEventsForStream(string streamId)

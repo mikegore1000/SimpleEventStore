@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConcurrencyException.cs" />
     <Compile Include="EventStore.cs" />
     <Compile Include="IStorageEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
