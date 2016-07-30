@@ -23,6 +23,8 @@ namespace SimpleEventStore
 
         public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId)
         {
+            Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
+
             return engine.ReadStreamForwards(streamId);
         }
     }

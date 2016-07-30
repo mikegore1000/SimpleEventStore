@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using SimpleEventStore.Tests.Events;
@@ -6,10 +7,9 @@ using SimpleEventStore.Tests.Events;
 namespace SimpleEventStore.Tests
 {
     // TODO: Add the remaining features
-    // 1. Allow a read from event version x to y
-    // 2. Read an "$all" stream - requires a global checkpoint
-    // 3. Shouldn't allow reading from the "$all" stream id
-    // 4. Shouldn't allow reading for null & "" stream ids
+    // 1. Read an "$all" stream - requires a global checkpoint
+    // 2. Shouldn't allow reading from the "$all" stream id
+    // 3. Shouldn't allow reading for null & "" stream ids
 
     [TestFixture]
     public class EventStoreReading
@@ -36,6 +36,14 @@ namespace SimpleEventStore.Tests
             Assert.That(events.Count(), Is.EqualTo(2));
             Assert.That(events.First().EventBody, Is.TypeOf<OrderCreated>());
             Assert.That(events.Skip(1).Single().EventBody, Is.TypeOf<OrderDispatched>());
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
+        public void when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
+        {
+            Assert.ThrowsAsync<ArgumentException>(async () => await subject.ReadStreamForwards(streamId));
         }
     }
 }
