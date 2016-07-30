@@ -5,6 +5,11 @@ using SimpleEventStore.Tests.Events;
 
 namespace SimpleEventStore.Tests
 {
+    // TODO: Add the remaining features
+    // 1. Allow the storage engine fake to be seeded with streams, better than using the actual methods that we are developing
+    // 2. Allow a read from event version x to y
+    // 3. Read an "$all" stream - requires a global checkpoint
+
     [TestFixture]
     public class EventStoreReading
     {
