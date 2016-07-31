@@ -46,7 +46,7 @@
     <Compile Include="Guard.cs" />
     <Compile Include="IStorageEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StorageEngineFake.cs" />
+    <Compile Include="InMemoryStorageEngine.cs" />
     <Compile Include="StorageEvent.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
