@@ -6,6 +6,9 @@ using SimpleEventStore.Tests.Events;
 
 namespace SimpleEventStore.Tests
 {
+    // TODO: Missing features:
+    // 1. Allow message headers to be specified on a per message basis
+
     [TestFixture]
     public class EventStoreAppending
     {
