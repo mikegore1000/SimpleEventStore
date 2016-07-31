@@ -63,9 +63,9 @@
     <Compile Include="EventStoreTestBase.cs" />
     <Compile Include="Events\OrderCreated.cs" />
     <Compile Include="Events\OrderDispatched.cs" />
-    <Compile Include="InMemoryEventStoreAllStreamReading.cs" />
-    <Compile Include="InMemoryEventStoreAppending.cs" />
-    <Compile Include="InMemoryEventStoreReading.cs" />
+    <Compile Include="InMemory\InMemoryEventStoreAllStreamReading.cs" />
+    <Compile Include="InMemory\InMemoryEventStoreAppending.cs" />
+    <Compile Include="InMemory\InMemoryEventStoreReading.cs" />
     <Compile Include="Metadata\TestMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
