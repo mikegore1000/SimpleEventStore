@@ -10,13 +10,13 @@ namespace SimpleEventStore.Tests
     public class EventStoreReading
     {
         private const string StreamId = "TEST-ORDER";
-        private SimpleEventStore.StorageEngineFake engine;
+        private SimpleEventStore.InMemoryStorageEngine engine;
         private EventStore subject;
 
         [SetUp]
         public async Task SetUp()
         {
-            engine = new SimpleEventStore.StorageEngineFake();
+            engine = new SimpleEventStore.InMemoryStorageEngine();
             subject = new EventStore(engine);
 
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));

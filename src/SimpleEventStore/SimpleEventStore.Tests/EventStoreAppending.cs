@@ -11,13 +11,13 @@ namespace SimpleEventStore.Tests
     public class EventStoreAppending
     {
         private const string StreamId = "TEST-ORDER";
-        private SimpleEventStore.StorageEngineFake engine;
+        private SimpleEventStore.InMemoryStorageEngine engine;
         private EventStore subject;
 
         [SetUp]
         public void SetUp()
         {
-            engine = new SimpleEventStore.StorageEngineFake();
+            engine = new SimpleEventStore.InMemoryStorageEngine();
             subject = new EventStore(engine);
         }
 

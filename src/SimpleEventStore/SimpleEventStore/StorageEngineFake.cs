@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace SimpleEventStore
 {
-    public class StorageEngineFake : IStorageEngine
+    public class InMemoryStorageEngine : IStorageEngine
     {
         private const string AllStreamId = "$all";
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
 
-        public StorageEngineFake()
+        public InMemoryStorageEngine()
         {
             streams[AllStreamId] = new List<StorageEvent>();
         }
