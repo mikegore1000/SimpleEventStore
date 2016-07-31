@@ -1,3 +1,5 @@
+using SimpleEventStore.InMemory;
+
 namespace SimpleEventStore.Tests.InMemory
 {
     public class InMemoryEventStoreAppending : EventStoreAppending
