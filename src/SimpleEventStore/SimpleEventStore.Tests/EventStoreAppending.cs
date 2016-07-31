@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SimpleEventStore.Tests
 {
-    public class EventStoreAppending
+    public abstract class EventStoreAppending : EventStoreTestBase
     {
         private const string StreamId = "TEST-ORDER";
 
@@ -104,11 +104,6 @@ namespace SimpleEventStore.Tests
 
             var stream = await subject.ReadStreamForwards(StreamId);
             Assert.Equal(metadata, stream.Single().Metadata);
-        }
-
-        private EventStore CreateEventStore()
-        {
-            return new EventStore(new InMemoryStorageEngine());
         }
     }
 }

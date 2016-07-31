@@ -60,8 +60,12 @@
     <Compile Include="EventStoreAllStreamReading.cs" />
     <Compile Include="EventStoreAppending.cs" />
     <Compile Include="EventStoreReading.cs" />
+    <Compile Include="EventStoreTestBase.cs" />
     <Compile Include="Events\OrderCreated.cs" />
     <Compile Include="Events\OrderDispatched.cs" />
+    <Compile Include="InMemoryEventStoreAllStreamReading.cs" />
+    <Compile Include="InMemoryEventStoreAppending.cs" />
+    <Compile Include="InMemoryEventStoreReading.cs" />
     <Compile Include="Metadata\TestMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

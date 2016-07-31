@@ -6,7 +6,7 @@ using Xunit;
 
 namespace SimpleEventStore.Tests
 {
-    public class EventStoreReading
+    public abstract class EventStoreReading : EventStoreTestBase
     {
         private const string StreamId = "TEST-ORDER";
 
@@ -46,11 +46,6 @@ namespace SimpleEventStore.Tests
 
             Assert.Equal(1, events.Count());
             Assert.IsType<OrderDispatched>(events.First().EventBody);
-        }
-
-        private EventStore CreateEventStore()
-        {
-            return new EventStore(new InMemoryStorageEngine());
         }
     }
 }

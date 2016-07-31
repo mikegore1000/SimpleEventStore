@@ -1,11 +1,11 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using SimpleEventStore.Tests.Events;
 using Xunit;
 
 namespace SimpleEventStore.Tests
 {
-    public abstract class EventStoreAllStreamReading
+    public abstract class EventStoreAllStreamReading : EventStoreTestBase
     {
         [Fact]
         public async Task when_reading_from_the_all_stream_events_are_returned_in_the_order_they_were_written_to_the_store()
@@ -47,11 +47,6 @@ namespace SimpleEventStore.Tests
             Assert.IsType<OrderCreated>(events.First().EventBody);
             Assert.Equal("STREAM-2", events.Skip(1).First().StreamId);
             Assert.IsType<OrderDispatched>(events.Skip(1).First().EventBody);
-        }
-
-        private EventStore CreateEventStore()
-        {
-            return new EventStore(new InMemoryStorageEngine());
         }
     }
 }
