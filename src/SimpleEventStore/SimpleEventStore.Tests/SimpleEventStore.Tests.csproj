@@ -52,7 +52,6 @@
     <Compile Include="Events\OrderDispatched.cs" />
     <Compile Include="Metadata\TestMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StorageEngineFake.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SimpleEventStore\SimpleEventStore.csproj">

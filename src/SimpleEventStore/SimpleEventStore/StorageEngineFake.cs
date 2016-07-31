@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SimpleEventStore.Tests
+namespace SimpleEventStore
 {
-    internal class StorageEngineFake : IStorageEngine
+    public class StorageEngineFake : IStorageEngine
     {
         private const string AllStreamId = "$all";
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();

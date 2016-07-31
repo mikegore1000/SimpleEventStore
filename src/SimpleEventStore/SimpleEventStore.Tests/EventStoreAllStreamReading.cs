@@ -15,7 +15,7 @@ namespace SimpleEventStore.Tests
         [SetUp]
         public async Task SetUp()
         {
-            engine = new StorageEngineFake();
+            engine = new SimpleEventStore.StorageEngineFake();
             subject = new EventStore(engine);
 
             await subject.AppendToStream("STREAM-1", 0, new EventData(new OrderCreated("STREAM-1")));
