@@ -32,9 +32,9 @@ namespace SimpleEventStore.Tests
             });
         }
 
-        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId)
+        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
-            return Task.FromResult<IEnumerable<StorageEvent>>(streams[streamId]);
+            return Task.FromResult(streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead));
         }
     }
 }

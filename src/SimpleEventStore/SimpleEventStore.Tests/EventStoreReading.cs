@@ -8,7 +8,7 @@ namespace SimpleEventStore.Tests
 {
     // TODO: Add the remaining features
     // 1. Read an "$all" stream - requires a global checkpoint
-    // 2. Allow reading a subset of the stream (e.g. events 2-5 out of a stream of 10)
+    // 2. Allow stream versions to be 64 bit ints
 
     [TestFixture]
     public class EventStoreReading
@@ -43,6 +43,15 @@ namespace SimpleEventStore.Tests
         public void when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
             Assert.ThrowsAsync<ArgumentException>(async () => await subject.ReadStreamForwards(streamId));
+        }
+
+        [Test]
+        public async Task when_reading_a_stream_only_the_required_events_are_returned()
+        {
+            var events = await subject.ReadStreamForwards(StreamId, startPosition: 2, numberOfEventsToRead: 1);
+
+            Assert.That(events.Count(), Is.EqualTo(1));
+            Assert.That(events.First().EventBody, Is.TypeOf<OrderDispatched>());
         }
     }
 }

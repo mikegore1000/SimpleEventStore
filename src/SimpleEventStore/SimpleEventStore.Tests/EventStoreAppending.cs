@@ -28,7 +28,7 @@ namespace SimpleEventStore.Tests
 
             await subject.AppendToStream(StreamId, 0, @event);
 
-            var stream = await engine.ReadStreamForwards(StreamId);
+            var stream = await subject.ReadStreamForwards(StreamId);
             Assert.That(stream.Count, Is.EqualTo(1));
             Assert.That(stream.Single().StreamId, Is.EqualTo(StreamId));
             Assert.That(stream.Single().EventBody, Is.EqualTo(@event.Body));
@@ -44,8 +44,7 @@ namespace SimpleEventStore.Tests
 
             await subject.AppendToStream(StreamId, 1, @event);
 
-            var stream = await engine.ReadStreamForwards(StreamId);
-
+            var stream = await subject.ReadStreamForwards(StreamId);
             Assert.That(stream.Count, Is.EqualTo(2));
             Assert.That(stream.Skip(1).Single().EventBody, Is.EqualTo(@event.Body));
             Assert.That(stream.Skip(1).Single().EventNumber, Is.EqualTo(2));
@@ -108,7 +107,7 @@ namespace SimpleEventStore.Tests
 
             await subject.AppendToStream(StreamId, 0, @event);
 
-            var stream = await engine.ReadStreamForwards(StreamId);
+            var stream = await subject.ReadStreamForwards(StreamId);
             Assert.That(stream.Single().Metadata, Is.EqualTo(metadata));
         }
     }

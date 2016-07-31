@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -31,7 +32,14 @@ namespace SimpleEventStore
         {
             Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
 
-            return engine.ReadStreamForwards(streamId);
+            return engine.ReadStreamForwards(streamId, 1, Int32.MaxValue);
+        }
+
+        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
+        {
+            Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
+
+            return engine.ReadStreamForwards(streamId, startPosition, numberOfEventsToRead);
         }
     }
 }
