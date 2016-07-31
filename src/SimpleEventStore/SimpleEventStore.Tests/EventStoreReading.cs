@@ -13,7 +13,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_reading_a_stream_all_events_are_returned()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
 
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
             await subject.AppendToStream(StreamId, 1, new EventData(new OrderDispatched(StreamId)));
@@ -31,13 +31,14 @@ namespace SimpleEventStore.Tests
         [InlineData(" ")]
         public async Task when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
-            await Assert.ThrowsAsync<ArgumentException>(async () => await CreateEventStore().ReadStreamForwards(streamId));
+            var eventStore = await CreateEventStore();
+            await Assert.ThrowsAsync<ArgumentException>(async () => await eventStore.ReadStreamForwards(streamId));
         }
 
         [Fact]
         public async Task when_reading_a_stream_only_the_required_events_are_returned()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
 
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
             await subject.AppendToStream(StreamId, 1, new EventData(new OrderDispatched(StreamId)));

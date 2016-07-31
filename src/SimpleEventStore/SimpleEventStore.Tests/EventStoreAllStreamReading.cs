@@ -10,7 +10,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_reading_from_the_all_stream_events_are_returned_in_the_order_they_were_written_to_the_store()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
 
             await subject.AppendToStream("STREAM-1", 0, new EventData(new OrderCreated("STREAM-1")));
             await subject.AppendToStream("STREAM-2", 0, new EventData(new OrderCreated("STREAM-2")));
@@ -33,7 +33,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_reading_from_the_all_steam_only_the_required_events_are_returned()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
 
             await subject.AppendToStream("STREAM-1", 0, new EventData(new OrderCreated("STREAM-1")));
             await subject.AppendToStream("STREAM-2", 0, new EventData(new OrderCreated("STREAM-2")));

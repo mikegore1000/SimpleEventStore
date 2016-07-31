@@ -14,7 +14,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_appending_to_a_new_stream_the_event_is_saved()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
             var @event = new EventData(new OrderCreated(StreamId));
 
             await subject.AppendToStream(StreamId, 0, @event);
@@ -29,7 +29,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_appending_to_an_existing_stream_the_event_is_saved()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
             var @event = new EventData(new OrderDispatched(StreamId));
 
@@ -45,7 +45,7 @@ namespace SimpleEventStore.Tests
         [InlineData(1)]
         public async Task when_appending_to_a_new_stream_with_an_unexpected_version__a_concurrency_error_is_thrown(int expectedVersion)
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
             var @event = new EventData(new OrderDispatched(StreamId));
 
             await Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
@@ -55,7 +55,7 @@ namespace SimpleEventStore.Tests
         [InlineData(2)]
         public async Task when_appending_to_an_existing_stream_with_an_unexpected_version_a_concurrency_error_is_thrown(int expectedVersion)
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
 
             var @event = new EventData(new OrderDispatched(StreamId));
@@ -69,13 +69,14 @@ namespace SimpleEventStore.Tests
         [InlineData("$all")]
         public async Task when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
-            await Assert.ThrowsAsync<ArgumentException>(async () => await CreateEventStore().AppendToStream(streamId, 0, new EventData(new OrderCreated(streamId))));
+            var eventStore = await CreateEventStore();
+            await Assert.ThrowsAsync<ArgumentException>(async () => eventStore.AppendToStream(streamId, 0, new EventData(new OrderCreated(streamId))));
         }
 
         [Fact]
         public async Task when_appending_to_a_new_stream_with_multiple_events_then_they_are_saved()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
             var @events = new []
             {
                 new EventData(new OrderCreated(StreamId)),
@@ -96,7 +97,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_appending_to_a_new_stream_the_event_metadata_is_saved()
         {
-            var subject = CreateEventStore();
+            var subject = await CreateEventStore();
             var metadata = new TestMetadata { Value = "Hello" };
             var @event = new EventData(new OrderCreated(StreamId), metadata);
 
