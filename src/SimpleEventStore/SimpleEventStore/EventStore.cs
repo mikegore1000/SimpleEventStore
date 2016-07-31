@@ -12,7 +12,7 @@ namespace SimpleEventStore
             this.engine = engine;
         }
 
-        public Task AppendToStream(string streamId, int expectedVersion, params object[] events)
+        public Task AppendToStream(string streamId, int expectedVersion, params EventData[] events)
         {
             Guard.IsNotNullOrEmptyOrAllStream(nameof(streamId), streamId);
 

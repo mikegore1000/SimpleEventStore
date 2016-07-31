@@ -6,12 +6,15 @@
 
         public object EventBody { get; private set; }
 
+        public object Metadata { get; private set; }
+
         public int EventNumber { get; private set; }
 
-        public StorageEvent(string streamId, object eventBody, int eventNumber)
+        public StorageEvent(string streamId, EventData data, int eventNumber)
         {
             StreamId = streamId;
-            EventBody = eventBody;
+            EventBody = data.Body;
+            Metadata = data.Metadata;
             EventNumber = eventNumber;
         }
     }

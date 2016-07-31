@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConcurrencyException.cs" />
+    <Compile Include="EventData.cs" />
     <Compile Include="EventStore.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IStorageEngine.cs" />
