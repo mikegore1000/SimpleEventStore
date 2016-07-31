@@ -8,7 +8,13 @@ namespace SimpleEventStore.Tests
 {
     internal class StorageEngineFake : IStorageEngine
     {
+        private const string AllStreamId = "$all";
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
+
+        public StorageEngineFake()
+        {
+            streams[AllStreamId] = new List<StorageEvent>();
+        }
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -24,6 +30,7 @@ namespace SimpleEventStore.Tests
                 if (firstEvent.EventNumber - 1 == streams[streamId].Count)
                 {
                     streams[streamId].AddRange(events);
+                    streams[AllStreamId].AddRange(events);
                 }
                 else
                 {

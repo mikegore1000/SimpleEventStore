@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EventDataTests.cs" />
+    <Compile Include="EventStoreAllStreamReading.cs" />
     <Compile Include="EventStoreAppending.cs" />
     <Compile Include="EventStoreReading.cs" />
     <Compile Include="Events\OrderCreated.cs" />

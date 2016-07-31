@@ -6,9 +6,6 @@ using SimpleEventStore.Tests.Events;
 
 namespace SimpleEventStore.Tests
 {
-    // TODO: Add the remaining features
-    // 1. Read an "$all" stream - requires a global checkpoint
-
     [TestFixture]
     public class EventStoreReading
     {
