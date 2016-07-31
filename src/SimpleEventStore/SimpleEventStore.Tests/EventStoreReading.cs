@@ -1,53 +1,56 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using SimpleEventStore.Tests.Events;
+using Xunit;
 
 namespace SimpleEventStore.Tests
 {
-    [TestFixture]
     public class EventStoreReading
     {
         private const string StreamId = "TEST-ORDER";
-        private SimpleEventStore.InMemoryStorageEngine engine;
-        private EventStore subject;
 
-        [SetUp]
-        public async Task SetUp()
+        [Fact]
+        public async Task when_reading_a_stream_all_events_are_returned()
         {
-            engine = new SimpleEventStore.InMemoryStorageEngine();
-            subject = new EventStore(engine);
+            var subject = CreateEventStore();
 
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
             await subject.AppendToStream(StreamId, 1, new EventData(new OrderDispatched(StreamId)));
-        }
 
-        [Test]
-        public async Task when_reading_a_stream_all_events_are_returned()
-        {
             var events = await subject.ReadStreamForwards(StreamId);
 
-            Assert.That(events.Count(), Is.EqualTo(2));
-            Assert.That(events.First().EventBody, Is.TypeOf<OrderCreated>());
-            Assert.That(events.Skip(1).Single().EventBody, Is.TypeOf<OrderDispatched>());
+            Assert.Equal(2, events.Count());
+            Assert.IsType<OrderCreated>(events.First().EventBody);
+            Assert.IsType<OrderDispatched>(events.Skip(1).Single().EventBody);
         }
 
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        public void when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
-            Assert.ThrowsAsync<ArgumentException>(async () => await subject.ReadStreamForwards(streamId));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await CreateEventStore().ReadStreamForwards(streamId));
         }
 
-        [Test]
+        [Fact]
         public async Task when_reading_a_stream_only_the_required_events_are_returned()
         {
+            var subject = CreateEventStore();
+
+            await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
+            await subject.AppendToStream(StreamId, 1, new EventData(new OrderDispatched(StreamId)));
+
             var events = await subject.ReadStreamForwards(StreamId, startPosition: 2, numberOfEventsToRead: 1);
 
-            Assert.That(events.Count(), Is.EqualTo(1));
-            Assert.That(events.First().EventBody, Is.TypeOf<OrderDispatched>());
+            Assert.Equal(1, events.Count());
+            Assert.IsType<OrderDispatched>(events.First().EventBody);
+        }
+
+        private EventStore CreateEventStore()
+        {
+            return new EventStore(new InMemoryStorageEngine());
         }
     }
 }

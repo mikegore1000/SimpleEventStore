@@ -1,87 +1,81 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using SimpleEventStore.Tests.Events;
 using SimpleEventStore.Tests.Metadata;
+using Xunit;
 
 namespace SimpleEventStore.Tests
 {
-    [TestFixture]
     public class EventStoreAppending
     {
         private const string StreamId = "TEST-ORDER";
-        private SimpleEventStore.InMemoryStorageEngine engine;
-        private EventStore subject;
 
-        [SetUp]
-        public void SetUp()
-        {
-            engine = new SimpleEventStore.InMemoryStorageEngine();
-            subject = new EventStore(engine);
-        }
-
-        [Test]
+        [Fact]
         public async Task when_appending_to_a_new_stream_the_event_is_saved()
         {
+            var subject = CreateEventStore();
             var @event = new EventData(new OrderCreated(StreamId));
 
             await subject.AppendToStream(StreamId, 0, @event);
 
             var stream = await subject.ReadStreamForwards(StreamId);
-            Assert.That(stream.Count, Is.EqualTo(1));
-            Assert.That(stream.Single().StreamId, Is.EqualTo(StreamId));
-            Assert.That(stream.Single().EventBody, Is.EqualTo(@event.Body));
-            Assert.That(stream.Single().EventNumber, Is.EqualTo(1));
+            Assert.Equal(1, stream.Count());
+            Assert.Equal(StreamId, stream.Single().StreamId);
+            Assert.Equal(@event.Body, stream.Single().EventBody);
+            Assert.Equal(1, stream.Single().EventNumber);
         }
 
-        [Test]
+        [Fact]
         public async Task when_appending_to_an_existing_stream_the_event_is_saved()
         {
+            var subject = CreateEventStore();
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
-
             var @event = new EventData(new OrderDispatched(StreamId));
 
             await subject.AppendToStream(StreamId, 1, @event);
 
             var stream = await subject.ReadStreamForwards(StreamId);
-            Assert.That(stream.Count, Is.EqualTo(2));
-            Assert.That(stream.Skip(1).Single().EventBody, Is.EqualTo(@event.Body));
-            Assert.That(stream.Skip(1).Single().EventNumber, Is.EqualTo(2));
+            Assert.Equal(2, stream.Count());
+            Assert.Equal(@event.Body, stream.Skip(1).Single().EventBody);
+            Assert.Equal(2, stream.Skip(1).Single().EventNumber);
         }
 
-        [TestCase(-1)]
-        [TestCase(1)]
-        public void when_appending_to_a_new_stream_with_an_unexpected_version__a_concurrency_error_is_thrown(int expectedVersion)
+        [InlineData(-1)]
+        [InlineData(1)]
+        public async Task when_appending_to_a_new_stream_with_an_unexpected_version__a_concurrency_error_is_thrown(int expectedVersion)
         {
+            var subject = CreateEventStore();
             var @event = new EventData(new OrderDispatched(StreamId));
 
-            Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
+            await Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
         }
 
-        [TestCase(0)]
-        [TestCase(2)]
+        [InlineData(0)]
+        [InlineData(2)]
         public async Task when_appending_to_an_existing_stream_with_an_unexpected_version_a_concurrency_error_is_thrown(int expectedVersion)
         {
+            var subject = CreateEventStore();
             await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
 
             var @event = new EventData(new OrderDispatched(StreamId));
 
-            Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
+            await Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(StreamId, expectedVersion, @event));
         }
 
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        [TestCase("$all")]
-        public void when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData("$all")]
+        public async Task when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
-            Assert.ThrowsAsync<ArgumentException>(async () => await subject.AppendToStream(streamId, 0, new EventData(new OrderCreated(streamId))));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await CreateEventStore().AppendToStream(streamId, 0, new EventData(new OrderCreated(streamId))));
         }
 
-        [Test]
+        [Fact]
         public async Task when_appending_to_a_new_stream_with_multiple_events_then_they_are_saved()
         {
+            var subject = CreateEventStore();
             var @events = new []
             {
                 new EventData(new OrderCreated(StreamId)),
@@ -92,23 +86,29 @@ namespace SimpleEventStore.Tests
 
             var savedEvents = await subject.ReadStreamForwards(StreamId);
 
-            Assert.That(savedEvents.Count(), Is.EqualTo(2));
-            Assert.That(savedEvents.First().StreamId, Is.EqualTo(StreamId));
-            Assert.That(savedEvents.First().EventNumber, Is.EqualTo(1));
-            Assert.That(savedEvents.Skip(1).Single().StreamId, Is.EqualTo(StreamId));
-            Assert.That(savedEvents.Skip(1).Single().EventNumber, Is.EqualTo(2));
+            Assert.Equal(2, savedEvents.Count());
+            Assert.Equal(StreamId, savedEvents.First().StreamId);
+            Assert.Equal(1, savedEvents.First().EventNumber);
+            Assert.Equal(StreamId, savedEvents.Skip(1).Single().StreamId);
+            Assert.Equal(2, savedEvents.Skip(1).Single().EventNumber);
         }
 
-        [Test]
+        [Fact]
         public async Task when_appending_to_a_new_stream_the_event_metadata_is_saved()
         {
+            var subject = CreateEventStore();
             var metadata = new TestMetadata { Value = "Hello" };
             var @event = new EventData(new OrderCreated(StreamId), metadata);
 
             await subject.AppendToStream(StreamId, 0, @event);
 
             var stream = await subject.ReadStreamForwards(StreamId);
-            Assert.That(stream.Single().Metadata, Is.EqualTo(metadata));
+            Assert.Equal(metadata, stream.Single().Metadata);
+        }
+
+        private EventStore CreateEventStore()
+        {
+            return new EventStore(new InMemoryStorageEngine());
         }
     }
 }
