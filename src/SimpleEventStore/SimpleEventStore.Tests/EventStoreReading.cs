@@ -8,7 +8,6 @@ namespace SimpleEventStore.Tests
 {
     // TODO: Add the remaining features
     // 1. Read an "$all" stream - requires a global checkpoint
-    // 2. Allow stream versions to be 64 bit ints
 
     [TestFixture]
     public class EventStoreReading
