@@ -1,4 +1,6 @@
-﻿namespace SimpleEventStore
+﻿using System;
+
+namespace SimpleEventStore
 {
     public class EventData
     {
@@ -8,12 +10,13 @@
 
         public EventData(object body)
         {
+            Guard.IsNotNull(nameof(body), body);
             Body = body;
         }
 
-        public EventData(object body, object metadata)
+        public EventData(object body, object metadata) : this(body)
         {
-            Body = body;
+            Guard.IsNotNull(nameof(metadata), metadata);
             Metadata = metadata;
         }
     }
