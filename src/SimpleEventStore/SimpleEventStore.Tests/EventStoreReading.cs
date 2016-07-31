@@ -8,6 +8,7 @@ namespace SimpleEventStore.Tests
 {
     // TODO: Add the remaining features
     // 1. Read an "$all" stream - requires a global checkpoint
+    // 2. Allow reading a subset of the stream (e.g. events 2-5 out of a stream of 10)
 
     [TestFixture]
     public class EventStoreReading
