@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SimpleEventStore.Tests.Events;
@@ -12,10 +13,10 @@ namespace SimpleEventStore.Tests
         {
             var subject = await CreateEventStore();
 
-            await subject.AppendToStream("STREAM-1", 0, new EventData(new OrderCreated("STREAM-1")));
-            await subject.AppendToStream("STREAM-2", 0, new EventData(new OrderCreated("STREAM-2")));
-            await subject.AppendToStream("STREAM-2", 1, new EventData(new OrderDispatched("STREAM-2")));
-            await subject.AppendToStream("STREAM-1", 1, new EventData(new OrderDispatched("STREAM-1")));
+            await subject.AppendToStream("STREAM-1", 0, new EventData(Guid.NewGuid(), new OrderCreated("STREAM-1")));
+            await subject.AppendToStream("STREAM-2", 0, new EventData(Guid.NewGuid(), new OrderCreated("STREAM-2")));
+            await subject.AppendToStream("STREAM-2", 1, new EventData(Guid.NewGuid(), new OrderDispatched("STREAM-2")));
+            await subject.AppendToStream("STREAM-1", 1, new EventData(Guid.NewGuid(), new OrderDispatched("STREAM-1")));
 
             var events = await subject.ReadStreamForwards("$all");
 
@@ -35,10 +36,10 @@ namespace SimpleEventStore.Tests
         {
             var subject = await CreateEventStore();
 
-            await subject.AppendToStream("STREAM-1", 0, new EventData(new OrderCreated("STREAM-1")));
-            await subject.AppendToStream("STREAM-2", 0, new EventData(new OrderCreated("STREAM-2")));
-            await subject.AppendToStream("STREAM-2", 1, new EventData(new OrderDispatched("STREAM-2")));
-            await subject.AppendToStream("STREAM-1", 1, new EventData(new OrderDispatched("STREAM-1")));
+            await subject.AppendToStream("STREAM-1", 0, new EventData(Guid.NewGuid(), new OrderCreated("STREAM-1")));
+            await subject.AppendToStream("STREAM-2", 0, new EventData(Guid.NewGuid(), new OrderCreated("STREAM-2")));
+            await subject.AppendToStream("STREAM-2", 1, new EventData(Guid.NewGuid(), new OrderDispatched("STREAM-2")));
+            await subject.AppendToStream("STREAM-1", 1, new EventData(Guid.NewGuid(), new OrderDispatched("STREAM-1")));
 
             var events = await subject.ReadStreamForwards("$all", 2, 2);
 

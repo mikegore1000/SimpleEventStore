@@ -1,4 +1,6 @@
-﻿namespace SimpleEventStore
+﻿using System;
+
+namespace SimpleEventStore
 {
     public class StorageEvent
     {
@@ -10,12 +12,15 @@
 
         public int EventNumber { get; private set; }
 
+        public Guid EventId { get; private set; }
+
         public StorageEvent(string streamId, EventData data, int eventNumber)
         {
             StreamId = streamId;
             EventBody = data.Body;
             Metadata = data.Metadata;
             EventNumber = eventNumber;
+            EventId = data.EventId;
         }
     }
 }

@@ -11,14 +11,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public void when_creating_an_instance_the_event_body_must_be_supplied()
         {
-            Assert.Throws<ArgumentException>(() => new EventData(null));
-        }
-
-        [Fact]
-        public void when_creating_an_instance_the_event_body_and_metadata_must_be_supplied()
-        {
-            Assert.Throws<ArgumentException>(() => new EventData(null, null));
-            Assert.Throws<ArgumentException>(() => new EventData(new OrderCreated(StreamId), null));
+            Assert.Throws<ArgumentException>(() => new EventData(Guid.NewGuid(), null));
         }
     }
 }

@@ -15,8 +15,8 @@ namespace SimpleEventStore.Tests
         {
             var subject = await CreateEventStore();
 
-            await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
-            await subject.AppendToStream(StreamId, 1, new EventData(new OrderDispatched(StreamId)));
+            await subject.AppendToStream(StreamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(StreamId)));
+            await subject.AppendToStream(StreamId, 1, new EventData(Guid.NewGuid(), new OrderDispatched(StreamId)));
 
             var events = await subject.ReadStreamForwards(StreamId);
 
@@ -40,8 +40,8 @@ namespace SimpleEventStore.Tests
         {
             var subject = await CreateEventStore();
 
-            await subject.AppendToStream(StreamId, 0, new EventData(new OrderCreated(StreamId)));
-            await subject.AppendToStream(StreamId, 1, new EventData(new OrderDispatched(StreamId)));
+            await subject.AppendToStream(StreamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(StreamId)));
+            await subject.AppendToStream(StreamId, 1, new EventData(Guid.NewGuid(), new OrderDispatched(StreamId)));
 
             var events = await subject.ReadStreamForwards(StreamId, startPosition: 2, numberOfEventsToRead: 1);
 
