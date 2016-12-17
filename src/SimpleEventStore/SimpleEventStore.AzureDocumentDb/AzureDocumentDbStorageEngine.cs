@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -84,15 +85,14 @@ namespace SimpleEventStore.AzureDocumentDb
             // TODO: Need to optimise the indexing policy
             if (commitsCollection == null)
             {
-                var collection = new DocumentCollection
-                {
-                    Id = "Commits"
-                };
+                var collection = new DocumentCollection();
+                collection.Id = "Commits";
+                collection.PartitionKey.Paths.Add("/streamId");
 
                 // TODO: Make this configurable by the consuming app - need to see if this can be updated, if so then we should attempt to update
                 var requestOptions = new RequestOptions
                 {
-
+                    OfferThroughput = 10100 // Ensure it's partitioned
                 };
 
                 commitsCollection = await client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(databaseName), collection, requestOptions);
