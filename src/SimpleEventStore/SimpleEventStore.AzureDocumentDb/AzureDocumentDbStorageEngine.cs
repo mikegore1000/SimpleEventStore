@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
+    // TODO: Migrate to UriFactory rather than use rid based links where appropriate
     public class AzureDocumentDbStorageEngine : IStorageEngine
     {
         private readonly IDocumentClient client;
