@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -34,11 +35,22 @@ namespace SimpleEventStore.AzureDocumentDb
         {
             //TODO: Provide support for a multi-event commit (via a stored procedure)
             var @event = events.First();
-            var maxRevisionArr = this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
-                .Where(x => x.StreamId == @event.StreamId)
-                .ToArray();
+            var maxRevisionQuery =
+                this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
+                    .Where(x => x.StreamId == @event.StreamId)
+                    .OrderByDescending(x => x.EventNumber)
+                    .Take(1)
+                    .AsDocumentQuery();
 
-            var maxRevision = maxRevisionArr.Length == 0 ? 0 : maxRevisionArr.Max(x => x.EventNumber);
+            int maxRevision = 0;
+
+            while (maxRevisionQuery.HasMoreResults)
+            {
+                foreach (var e in await maxRevisionQuery.ExecuteNextAsync<DocumentDbStorageEvent>())
+                {
+                    maxRevision = e.EventNumber;
+                }
+            }
 
             if (@event.EventNumber == maxRevision + 1)
             {
@@ -53,18 +65,28 @@ namespace SimpleEventStore.AzureDocumentDb
             }
         }
 
-        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
+        public async Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
             int endPosition = numberOfEventsToRead == int.MaxValue ? int.MaxValue : startPosition + numberOfEventsToRead;
 
             // TODO: Read more into the execute next async method - looks like you perform a do while loop
             // See: https://vincentlauzon.com/2015/01/06/documentdb-async-querying-streaming/
-            var events = this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
+            var eventsQuery = this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
                 .Where(x => x.StreamId == streamId && x.EventNumber >= startPosition && x.EventNumber <= endPosition)
                 .OrderBy(x => x.EventNumber)
-                .ToArray();
+                .AsDocumentQuery();
 
-            return Task.FromResult(events.Select(x => x.ToStorageEvent()));
+            var events = new List<StorageEvent>();
+
+            while (eventsQuery.HasMoreResults)
+            {
+                foreach (var e in await eventsQuery.ExecuteNextAsync<DocumentDbStorageEvent>())
+                {
+                    events.Add(e.ToStorageEvent());
+                }
+            }
+
+            return events.AsReadOnly();
         }
 
         private async Task CreateDatabaseIfItDoesNotExist()
