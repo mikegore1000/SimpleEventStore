@@ -69,8 +69,6 @@ namespace SimpleEventStore.AzureDocumentDb
         {
             int endPosition = numberOfEventsToRead == int.MaxValue ? int.MaxValue : startPosition + numberOfEventsToRead;
 
-            // TODO: Read more into the execute next async method - looks like you perform a do while loop
-            // See: https://vincentlauzon.com/2015/01/06/documentdb-async-querying-streaming/
             var eventsQuery = this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
                 .Where(x => x.StreamId == streamId && x.EventNumber >= startPosition && x.EventNumber <= endPosition)
                 .OrderBy(x => x.EventNumber)
