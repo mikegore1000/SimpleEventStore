@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -11,18 +10,17 @@ using Newtonsoft.Json.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
-    // TODO: Migrate to UriFactory rather than use rid based links where appropriate
     public class AzureDocumentDbStorageEngine : IStorageEngine
     {
         private readonly IDocumentClient client;
         private readonly string databaseName;
-        private Database database;
-        private DocumentCollection commitsCollection;
+        private readonly Uri commitsLink;
 
         public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName)
         {
             this.client = client;
             this.databaseName = databaseName;
+            this.commitsLink = UriFactory.CreateDocumentCollectionUri(databaseName, "Commits");
         }
 
         public async Task Initialise()
@@ -36,26 +34,19 @@ namespace SimpleEventStore.AzureDocumentDb
             //TODO: Provide support for a multi-event commit (via a stored procedure)
             var @event = events.First();
             var maxRevisionQuery =
-                this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
+                this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsLink)
                     .Where(x => x.StreamId == @event.StreamId)
                     .OrderByDescending(x => x.EventNumber)
+                    .Select(x => x.EventNumber)
                     .Take(1)
                     .AsDocumentQuery();
 
-            int maxRevision = 0;
-
-            while (maxRevisionQuery.HasMoreResults)
-            {
-                foreach (var e in await maxRevisionQuery.ExecuteNextAsync<DocumentDbStorageEvent>())
-                {
-                    maxRevision = e.EventNumber;
-                }
-            }
+            int maxRevision = (await maxRevisionQuery.ExecuteNextAsync<int>()).FirstOrDefault();
 
             if (@event.EventNumber == maxRevision + 1)
             {
                 await this.client.CreateDocumentAsync(
-                    commitsCollection.DocumentsLink,
+                    commitsLink,
                     DocumentDbStorageEvent.FromStorageEvent(@event), 
                     disableAutomaticIdGeneration: true);
             }
@@ -69,7 +60,7 @@ namespace SimpleEventStore.AzureDocumentDb
         {
             int endPosition = numberOfEventsToRead == int.MaxValue ? int.MaxValue : startPosition + numberOfEventsToRead;
 
-            var eventsQuery = this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsCollection.DocumentsLink)
+            var eventsQuery = this.client.CreateDocumentQuery<DocumentDbStorageEvent>(commitsLink)
                 .Where(x => x.StreamId == streamId && x.EventNumber >= startPosition && x.EventNumber <= endPosition)
                 .OrderBy(x => x.EventNumber)
                 .AsDocumentQuery();
@@ -89,23 +80,30 @@ namespace SimpleEventStore.AzureDocumentDb
 
         private async Task CreateDatabaseIfItDoesNotExist()
         {
-            this.database = client.CreateDatabaseQuery().Where(x => x.Id == databaseName).ToArray().SingleOrDefault();
+            var databaseExistsQuery = client.CreateDatabaseQuery()
+                .Where(x => x.Id == databaseName)
+                .Take(1)
+                .AsDocumentQuery();
 
-            if (this.database == null)
+            if (!(await databaseExistsQuery.ExecuteNextAsync<Database>()).Any())
             {
-                this.database = await client.CreateDatabaseAsync(new Database { Id = databaseName });
+                await client.CreateDatabaseAsync(new Database {Id = databaseName});
             }
         }
 
         private async Task CreateCollectionIfItDoesNotExist()
         {
-            commitsCollection = client.CreateDocumentCollectionQuery(this.database.CollectionsLink)
-                .ToArray()
-                .SingleOrDefault(x => x.Id == "Commits");
+            var databaseUri = UriFactory.CreateDatabaseUri(databaseName);
 
-            // TODO: Need to optimise the indexing policy
-            if (commitsCollection == null)
+            var commitsCollectionQuery = client.CreateDocumentCollectionQuery(databaseUri)
+                .Where(x => x.Id == "Commits")
+                .Take(1)
+                .AsDocumentQuery();
+
+            if (!(await commitsCollectionQuery.ExecuteNextAsync<DocumentCollection>()).Any())
             {
+
+                // TODO: Need to optimise the indexing policy
                 var collection = new DocumentCollection();
                 collection.Id = "Commits";
                 collection.PartitionKey.Paths.Add("/streamId");
@@ -116,7 +114,7 @@ namespace SimpleEventStore.AzureDocumentDb
                     OfferThroughput = 10100 // Ensure it's partitioned
                 };
 
-                commitsCollection = await client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(databaseName), collection, requestOptions);
+                await client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(databaseName), collection, requestOptions);
             }
         }
 
