@@ -121,7 +121,10 @@ namespace SimpleEventStore.AzureDocumentDb
         private class DocumentDbStorageEvent
         {
             [JsonProperty("id")]
-            public Guid Id { get; set;  }
+            public string Id { get; set;  }
+
+            [JsonProperty("eventId")]
+            public Guid EventId { get; set; }
 
             [JsonProperty("body")]
             public JObject Body { get; set; }
@@ -144,7 +147,8 @@ namespace SimpleEventStore.AzureDocumentDb
             public static DocumentDbStorageEvent FromStorageEvent(StorageEvent @event)
             {
                 var docDbEvent = new DocumentDbStorageEvent();
-                docDbEvent.Id = @event.EventId;
+                docDbEvent.Id = $"{@event.StreamId}:{@event.EventNumber}";
+                docDbEvent.EventId = @event.EventId;
                 docDbEvent.Body = JObject.FromObject(@event.EventBody);
                 docDbEvent.BodyType = @event.EventBody.GetType().AssemblyQualifiedName;
                 if (@event.Metadata != null)
@@ -162,7 +166,7 @@ namespace SimpleEventStore.AzureDocumentDb
             {
                 object body = Body.ToObject(Type.GetType(BodyType));
                 object metadata = Metadata?.ToObject(Type.GetType(MetadataType));
-                return new StorageEvent(StreamId, new EventData(Id, body, metadata), EventNumber);
+                return new StorageEvent(StreamId, new EventData(EventId, body, metadata), EventNumber);
             }
         }
     }
