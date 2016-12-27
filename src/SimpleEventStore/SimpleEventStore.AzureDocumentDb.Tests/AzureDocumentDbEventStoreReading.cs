@@ -3,7 +3,7 @@ using SimpleEventStore.Tests;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
-    public class AzureDocumentDbEventStoreAppending : EventStoreAppending
+    public class AzureDocumentDbEventStoreReading : EventStoreReading
     {
         protected override Task<IStorageEngine> CreateStorageEngine()
         {
