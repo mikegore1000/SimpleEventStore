@@ -51,6 +51,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureDocumentDbStorageEngine.cs" />
+    <Compile Include="CatchUpSubscription.cs" />
+    <Compile Include="DocumentDbStorageEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
