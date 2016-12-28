@@ -11,22 +11,25 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
     public class SubscriptionSpikes
     {
         private readonly ITestOutputHelper output;
+        private readonly DocumentClient client;
 
         public SubscriptionSpikes(ITestOutputHelper output)
         {
             this.output = output;
+
+            var documentDbUri = "https://mg-eventsourcing-simple.documents.azure.com:443/";
+            var authKey = "9FbXSIuFp420lalYtSsUmA9TNscZqsvseuSESRDW5saqaQxUjiv5UNGgxz2ODxKvfKIv4dKrzCVfspg97JDBTQ==";
+            client = new DocumentClient(new Uri(documentDbUri), authKey);
         }
 
-        [Fact(Skip = "Experimental spike")]
+        //[Fact(Skip = "Experimental spike")]
+        [Fact]
         public async void TestCatchUpSubscription()
         {
             var eventsByStream = new Dictionary<string, List<StorageEvent>>();
-            var documentDbUri = "https://mg-eventsourcing-simple.documents.azure.com:443/";
-            var authKey = "9FbXSIuFp420lalYtSsUmA9TNscZqsvseuSESRDW5saqaQxUjiv5UNGgxz2ODxKvfKIv4dKrzCVfspg97JDBTQ==";
-            var databaseName = "DocumentDbEventStoreTests";
-            DocumentClient client = new DocumentClient(new Uri(documentDbUri), authKey);
+            var sut = new CatchUpSubscription(client, "DocumentDbEventStoreTests", 10);
 
-            var sut = new CatchUpSubscription(client, databaseName, (checkpoint, @event) =>
+            await sut.ReadEvents((checkpoint, @event) =>
             {
                 output.WriteLine($"Checkpoint: {checkpoint}, Event: {@event}");
 
@@ -38,8 +41,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                 eventsByStream[@event.StreamId].Add(@event);
             });
 
-            await sut.ReadEvents();
-
+            output.WriteLine($"Read {eventsByStream.Keys.Count} distinct streams");
 
             foreach (var streamKey in eventsByStream.Keys)
             {

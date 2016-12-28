@@ -11,23 +11,35 @@ namespace SimpleEventStore.AzureDocumentDb
     {
         private readonly IDocumentClient client;
         private readonly Uri collectionLink;
-        private readonly Action<string, StorageEvent> onNextEvent;
+        private readonly int batchSize;
 
-        public CatchUpSubscription(IDocumentClient client, string databaseName, Action<string, StorageEvent> onNextEvent)
+        public CatchUpSubscription(IDocumentClient client, string databaseName, int batchSize)
         {
             this.client = client;
             this.collectionLink = UriFactory.CreateDocumentCollectionUri(databaseName, "Commits");
-            this.onNextEvent = onNextEvent;
+            this.batchSize = batchSize;
         }
 
-        public async Task ReadEvents()
+        public async Task ReadEvents(Action<string, StorageEvent> onNextEvent)
         {
-            var feedResponse = await client.ReadDocumentFeedAsync(collectionLink, new FeedOptions { MaxItemCount = 100 });
+            FeedResponse<dynamic> feedResponse;
+            string checkpointToken = null;
 
-            foreach (var @event in feedResponse.OfType<Document>())
+            do
             {
-                onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
-            }
+                feedResponse = await client.ReadDocumentFeedAsync(collectionLink, new FeedOptions
+                {
+                    MaxItemCount = batchSize,
+                    RequestContinuation = checkpointToken
+                });
+
+                checkpointToken = feedResponse.ResponseContinuation;
+
+                foreach (var @event in feedResponse.OfType<Document>())
+                {
+                    onNextEvent(checkpointToken, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
+                }
+            } while (feedResponse.ResponseContinuation != null);
         }
     }
 }
