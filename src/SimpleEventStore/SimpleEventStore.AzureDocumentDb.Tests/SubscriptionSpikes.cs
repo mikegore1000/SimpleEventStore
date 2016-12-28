@@ -22,8 +22,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             client = new DocumentClient(new Uri(documentDbUri), authKey);
         }
 
-        //[Fact(Skip = "Experimental spike")]
-        [Fact]
+        [Fact(Skip = "Experimental spike")]
         public async void TestCatchUpSubscription()
         {
             var eventsByStream = new Dictionary<string, List<StorageEvent>>();
