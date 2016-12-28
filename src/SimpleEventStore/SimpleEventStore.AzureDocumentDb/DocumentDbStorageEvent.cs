@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -44,6 +45,23 @@ namespace SimpleEventStore.AzureDocumentDb
             }
             docDbEvent.StreamId = @event.StreamId;
             docDbEvent.EventNumber = @event.EventNumber;
+
+            return docDbEvent;
+        }
+
+        public static DocumentDbStorageEvent FromDocument(Document document)
+        {
+            var docDbEvent = new DocumentDbStorageEvent
+            {
+                Id = document.GetPropertyValue<string>("id"),
+                EventId = document.GetPropertyValue<Guid>("eventId"),
+                Body = document.GetPropertyValue<JObject>("body"),
+                BodyType = document.GetPropertyValue<string>("bodyType"),
+                Metadata = document.GetPropertyValue<JObject>("metadata"),
+                MetadataType = document.GetPropertyValue<string>("metadataType"),
+                StreamId = document.GetPropertyValue<string>("streamId"),
+                EventNumber = document.GetPropertyValue<int>("eventNumber")
+            };
 
             return docDbEvent;
         }

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -23,20 +20,14 @@ namespace SimpleEventStore.AzureDocumentDb
             this.onNextEvent = onNextEvent;
         }
 
-        public async Task Test()
+        public async Task ReadEvents()
         {
-            FeedResponse<dynamic> feedResponse = null;
+            var feedResponse = await client.ReadDocumentFeedAsync(collectionLink, new FeedOptions { MaxItemCount = 100 });
 
-            do
+            foreach (var @event in feedResponse.OfType<Document>())
             {
-                feedResponse = await client.ReadDocumentFeedAsync(collectionLink, new FeedOptions { MaxItemCount = 100 });
-
-                foreach (var @event in feedResponse.OfType<DocumentDbStorageEvent>())
-                {
-                    onNextEvent(feedResponse.ResponseContinuation, @event.ToStorageEvent());
-                }
+                onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
             }
-            while (feedResponse.ResponseContinuation != null);
         }
     }
 }
