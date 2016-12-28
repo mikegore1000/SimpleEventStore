@@ -7,13 +7,7 @@ namespace SimpleEventStore.InMemory
 {
     public class InMemoryStorageEngine : IStorageEngine
     {
-        private const string AllStreamId = "$all";
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
-
-        public InMemoryStorageEngine()
-        {
-            streams[AllStreamId] = new List<StorageEvent>();
-        }
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -29,7 +23,6 @@ namespace SimpleEventStore.InMemory
                 if (firstEvent.EventNumber - 1 == streams[streamId].Count)
                 {
                     streams[streamId].AddRange(events);
-                    streams[AllStreamId].AddRange(events);
                 }
                 else
                 {

@@ -15,7 +15,7 @@ namespace SimpleEventStore
 
         public Task AppendToStream(string streamId, int expectedVersion, params EventData[] events)
         {
-            Guard.IsNotNullOrEmptyOrAllStream(nameof(streamId), streamId);
+            Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
 
             var storageEvents = new List<StorageEvent>();
             var eventVersion = expectedVersion;

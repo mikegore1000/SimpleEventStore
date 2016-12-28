@@ -57,13 +57,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EventDataTests.cs" />
-    <Compile Include="EventStoreAllStreamReading.cs" />
     <Compile Include="EventStoreAppending.cs" />
     <Compile Include="EventStoreReading.cs" />
     <Compile Include="EventStoreTestBase.cs" />
     <Compile Include="Events\OrderCreated.cs" />
     <Compile Include="Events\OrderDispatched.cs" />
-    <Compile Include="InMemory\InMemoryEventStoreAllStreamReading.cs" />
     <Compile Include="InMemory\InMemoryEventStoreAppending.cs" />
     <Compile Include="InMemory\InMemoryEventStoreReading.cs" />
     <Compile Include="Metadata\TestMetadata.cs" />

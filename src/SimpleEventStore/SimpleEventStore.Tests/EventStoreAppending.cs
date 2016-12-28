@@ -68,7 +68,6 @@ namespace SimpleEventStore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        [InlineData("$all")]
         public async Task when_appending_to_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
             var eventStore = await CreateEventStore();
