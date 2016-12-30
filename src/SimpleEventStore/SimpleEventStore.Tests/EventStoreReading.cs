@@ -6,6 +6,10 @@ using Xunit;
 
 namespace SimpleEventStore.Tests
 {
+    // TODOs
+    // 1. Make partioning support configurable
+    // 2. Allow for lower levels of consistency than just strong
+
     public abstract class EventStoreReading : EventStoreTestBase
     {
         [Fact]

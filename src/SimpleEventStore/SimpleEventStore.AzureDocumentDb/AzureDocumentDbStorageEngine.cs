@@ -42,7 +42,10 @@ namespace SimpleEventStore.AzureDocumentDb
 
             try
             {
-                var result = await this.client.ExecuteStoredProcedureAsync<dynamic>(storedProcLink, docs);
+                var result = await this.client.ExecuteStoredProcedureAsync<dynamic>(
+                    storedProcLink, 
+                    new RequestOptions { PartitionKey = new PartitionKey(streamId) },
+                    docs);
             }
             catch (DocumentClientException ex)
             {
