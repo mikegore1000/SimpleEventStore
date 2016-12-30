@@ -12,6 +12,7 @@ namespace SimpleEventStore.AzureDocumentDb
     {
         private const string CommitsCollectionName = "Commits";
         private const string AppendStoredProcedureName = "appendToStream";
+        private const string ConcurrencyConflictErrorKey = "Concurrency conflict.";
 
         private readonly IDocumentClient client;
         private readonly string databaseName;
@@ -39,9 +40,19 @@ namespace SimpleEventStore.AzureDocumentDb
 
             var docs = events.Select(d => DocumentDbStorageEvent.FromStorageEvent(d)).ToList();
 
-            var response = await this.client.ExecuteStoredProcedureAsync<dynamic>(storedProcLink, docs);
+            try
+            {
+                var result = await this.client.ExecuteStoredProcedureAsync<dynamic>(storedProcLink, docs);
+            }
+            catch (DocumentClientException ex)
+            {
+                if (ex.Error.Message.Contains(ConcurrencyConflictErrorKey))
+                {
+                    throw new ConcurrencyException(ex.Error.Message, ex);
+                }
 
-            //    throw new ConcurrencyException($"Expected revision {maxRevision}, actual {@event.EventNumber}");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
