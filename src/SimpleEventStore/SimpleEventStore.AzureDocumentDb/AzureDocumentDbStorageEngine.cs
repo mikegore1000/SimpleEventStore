@@ -16,13 +16,15 @@ namespace SimpleEventStore.AzureDocumentDb
 
         private readonly IDocumentClient client;
         private readonly string databaseName;
+        private readonly ConsistencyLevel consistencyLevel;
         private readonly Uri commitsLink;
         private readonly Uri storedProcLink;
 
-        public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName)
+        public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName, ConsistencyLevel consistencyLevel)
         {
             this.client = client;
             this.databaseName = databaseName;
+            this.consistencyLevel = consistencyLevel;
             this.commitsLink = UriFactory.CreateDocumentCollectionUri(databaseName, CommitsCollectionName);
             this.storedProcLink = UriFactory.CreateStoredProcedureUri(databaseName, CommitsCollectionName, AppendStoredProcedureName);
         }
@@ -44,7 +46,7 @@ namespace SimpleEventStore.AzureDocumentDb
             {
                 var result = await this.client.ExecuteStoredProcedureAsync<dynamic>(
                     storedProcLink, 
-                    new RequestOptions { PartitionKey = new PartitionKey(streamId) },
+                    new RequestOptions { PartitionKey = new PartitionKey(streamId), ConsistencyLevel = this.consistencyLevel },
                     docs);
             }
             catch (DocumentClientException ex)
@@ -104,8 +106,6 @@ namespace SimpleEventStore.AzureDocumentDb
 
             if (!(await commitsCollectionQuery.ExecuteNextAsync<DocumentCollection>()).Any())
             {
-
-                // TODO: Need to optimise the indexing policy
                 var collection = new DocumentCollection();
                 collection.Id = CommitsCollectionName;
                 collection.PartitionKey.Paths.Add("/streamId");

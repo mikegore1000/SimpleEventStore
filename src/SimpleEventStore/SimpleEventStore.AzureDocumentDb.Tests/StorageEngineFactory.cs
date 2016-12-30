@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
@@ -16,7 +17,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             var databaseName = "DocumentDbEventStoreTests";
             DocumentClient client = new DocumentClient(new Uri(documentDbUri), authKey);
 
-            var storageEngine = new AzureDocumentDbStorageEngine(client, databaseName);
+            var storageEngine = new AzureDocumentDbStorageEngine(client, databaseName, ConsistencyLevel.BoundedStaleness);
             await storageEngine.Initialise();
 
             return storageEngine;
