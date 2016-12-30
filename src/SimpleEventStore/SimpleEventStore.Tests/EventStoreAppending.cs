@@ -41,6 +41,7 @@ namespace SimpleEventStore.Tests
             Assert.Equal(2, stream.Skip(1).Single().EventNumber);
         }
 
+        [Theory]
         [InlineData(-1)]
         [InlineData(1)]
         public async Task when_appending_to_a_new_stream_with_an_unexpected_version__a_concurrency_error_is_thrown(int expectedVersion)
@@ -52,6 +53,7 @@ namespace SimpleEventStore.Tests
             await Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(streamId, expectedVersion, @event));
         }
 
+        [Theory]
         [InlineData(0)]
         [InlineData(2)]
         public async Task when_appending_to_an_existing_stream_with_an_unexpected_version_a_concurrency_error_is_thrown(int expectedVersion)
@@ -65,6 +67,7 @@ namespace SimpleEventStore.Tests
             await Assert.ThrowsAsync<ConcurrencyException>(async () => await subject.AppendToStream(streamId, expectedVersion, @event));
         }
 
+        [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
