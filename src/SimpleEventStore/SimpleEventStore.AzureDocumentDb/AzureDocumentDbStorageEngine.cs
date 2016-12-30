@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -109,6 +110,9 @@ namespace SimpleEventStore.AzureDocumentDb
                 var collection = new DocumentCollection();
                 collection.Id = CommitsCollectionName;
                 collection.PartitionKey.Paths.Add("/streamId");
+                collection.IndexingPolicy.IncludedPaths.Add(new IncludedPath { Path = "/*" });
+                collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/body/*"});
+                collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/metadata/*" });
 
                 // TODO: Make this configurable by the consuming app - need to see if this can be updated, if so then we should attempt to update
                 var requestOptions = new RequestOptions
