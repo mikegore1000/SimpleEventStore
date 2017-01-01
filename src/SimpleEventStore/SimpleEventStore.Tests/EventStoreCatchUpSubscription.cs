@@ -106,8 +106,7 @@ namespace SimpleEventStore.Tests
         }
 
         // TODO: Missing tests
-        // 1. Support multiple subscriptions
-        // 2. Checkpointing
+        // 1. Checkpointing
         // 3. Consider threading across all tests
     }
 }
