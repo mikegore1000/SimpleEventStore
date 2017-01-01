@@ -64,6 +64,13 @@ namespace SimpleEventStore.Tests
             Assert.Equal(0, streams.Count);
         }
 
+        [Fact]
+        public async Task when_a_subscription_is_started_a_next_event_function_must_be_supplied()
+        {
+            var sut = await CreateEventStore();
+            Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll(null));
+        }
+
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
             for (int i = 0; i < NumberOfStreamsToCreate; i++)

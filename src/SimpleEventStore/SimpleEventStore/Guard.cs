@@ -16,7 +16,7 @@ namespace SimpleEventStore
         {
             if (value == null)
             {
-                throw new ArgumentException("The value cannot be a null, empty string or contain only whitespace", paramName);
+                throw new ArgumentNullException(paramName, "The value cannot be null");
             }
         }
     }

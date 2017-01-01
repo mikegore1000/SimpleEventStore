@@ -51,6 +51,8 @@ namespace SimpleEventStore.InMemory
 
         public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
         {
+            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
+
             this.subscription = onNextEvent;
             PollAllEvents();
         }
