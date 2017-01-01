@@ -71,6 +71,22 @@ namespace SimpleEventStore.Tests
             Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll(null));
         }
 
+        [Fact]
+        public async Task when_multiple_subscriptions_are_created_they_all_receive_events()
+        {
+            var subscription1Called = false;
+            var subscription2Called = false;
+            var sut = await CreateEventStore();
+            sut.SubscribeToAll((c, e) => subscription1Called = true);
+            sut.SubscribeToAll((c, e) => subscription2Called = true);
+
+            var streamId = Guid.NewGuid().ToString();
+            await sut.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
+
+            Assert.True(subscription1Called);
+            Assert.True(subscription2Called);
+        }
+
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
             for (int i = 0; i < NumberOfStreamsToCreate; i++)
@@ -91,6 +107,7 @@ namespace SimpleEventStore.Tests
 
         // TODO: Missing tests
         // 1. Support multiple subscriptions
+        // 2. Checkpointing
         // 3. Consider threading across all tests
     }
 }

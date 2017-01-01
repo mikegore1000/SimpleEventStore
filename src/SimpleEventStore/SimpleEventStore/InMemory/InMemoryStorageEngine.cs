@@ -12,7 +12,7 @@ namespace SimpleEventStore.InMemory
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
         private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
         private int polling;
-        private Action<string, StorageEvent> subscription;
+        private List<Action<string, StorageEvent>> subscriptions = new List<Action<string, StorageEvent>>();
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -53,7 +53,7 @@ namespace SimpleEventStore.InMemory
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            this.subscription = onNextEvent;
+            this.subscriptions.Add(onNextEvent);
             PollAllEvents();
         }
 
@@ -62,6 +62,7 @@ namespace SimpleEventStore.InMemory
             if (Interlocked.CompareExchange(ref polling, 1, 0) == 0)
             {
                 foreach (var @event in allEvents)
+                foreach (var subscription in subscriptions)
                 {
                     subscription?.Invoke(string.Empty, @event);
                 }
