@@ -90,8 +90,7 @@ namespace SimpleEventStore.Tests
         }
 
         // TODO: Missing tests
-        // 1. Validation tests e.g. passing in null functions
-        // 2. Support multiple subscriptions
+        // 1. Support multiple subscriptions
         // 3. Consider threading across all tests
     }
 }
