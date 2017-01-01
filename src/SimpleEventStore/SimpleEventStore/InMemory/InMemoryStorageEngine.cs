@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,13 @@ namespace SimpleEventStore.InMemory
 {
     public class InMemoryStorageEngine : IStorageEngine
     {
+        private const string AllStreamId = "$all";
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
+
+        public InMemoryStorageEngine()
+        {
+            streams[AllStreamId] = new List<StorageEvent>();
+        }
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -23,6 +30,7 @@ namespace SimpleEventStore.InMemory
                 if (firstEvent.EventNumber - 1 == streams[streamId].Count)
                 {
                     streams[streamId].AddRange(events);
+                    streams[AllStreamId].AddRange(events);
                 }
                 else
                 {
@@ -34,6 +42,14 @@ namespace SimpleEventStore.InMemory
         public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
             return Task.FromResult(streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead));
+        }
+
+        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
+        {
+            foreach (var @event in streams[AllStreamId])
+            {
+                onNextEvent(string.Empty, @event);
+            }
         }
     }
 }

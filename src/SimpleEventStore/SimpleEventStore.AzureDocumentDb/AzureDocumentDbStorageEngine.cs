@@ -138,5 +138,10 @@ namespace SimpleEventStore.AzureDocumentDb
                 });
             }
         }
+
+        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
