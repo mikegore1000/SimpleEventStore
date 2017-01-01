@@ -2,19 +2,17 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore.InMemory
 {
     public class InMemoryStorageEngine : IStorageEngine
     {
-        private const string AllStreamId = "$all";
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
-
-        public InMemoryStorageEngine()
-        {
-            streams[AllStreamId] = new List<StorageEvent>();
-        }
+        private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
+        private int polling;
+        private Action<string, StorageEvent> subscription;
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -27,16 +25,23 @@ namespace SimpleEventStore.InMemory
 
                 var firstEvent = events.First();
 
-                if (firstEvent.EventNumber - 1 == streams[streamId].Count)
-                {
-                    streams[streamId].AddRange(events);
-                    streams[AllStreamId].AddRange(events);
-                }
-                else
+                if (firstEvent.EventNumber - 1 != streams[streamId].Count)
                 {
                     throw new ConcurrencyException($"Concurrency conflict when appending to stream {@streamId}. Expected revision {firstEvent.EventNumber} : Actual revision {streams[streamId].Count}");
                 }
+
+                streams[streamId].AddRange(events);
+                AddEventsToAllStream(events);
+                PollAllEvents();
             });
+        }
+
+        private void AddEventsToAllStream(IEnumerable<StorageEvent> events)
+        {
+            foreach (var e in events)
+            {
+                allEvents.Add(e);
+            }
         }
 
         public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
@@ -46,9 +51,20 @@ namespace SimpleEventStore.InMemory
 
         public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
         {
-            foreach (var @event in streams[AllStreamId])
+            this.subscription = onNextEvent;
+            PollAllEvents();
+        }
+
+        private void PollAllEvents()
+        {
+            if (Interlocked.CompareExchange(ref polling, 1, 0) == 0)
             {
-                onNextEvent(string.Empty, @event);
+                foreach (var @event in allEvents)
+                {
+                    subscription?.Invoke(string.Empty, @event);
+                }
+
+                Interlocked.Exchange(ref polling, 0);
             }
         }
     }
