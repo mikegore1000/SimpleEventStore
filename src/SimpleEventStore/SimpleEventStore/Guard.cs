@@ -2,9 +2,9 @@ using System;
 
 namespace SimpleEventStore
 {
-    internal static class Guard
+    public static class Guard
     {
-        internal static void IsNotNullOrEmpty(string paramName, string value)
+        public static void IsNotNullOrEmpty(string paramName, string value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -12,7 +12,7 @@ namespace SimpleEventStore
             }
         }
 
-        internal static void IsNotNull(string paramName, object value)
+        public static void IsNotNull(string paramName, object value)
         {
             if (value == null)
             {

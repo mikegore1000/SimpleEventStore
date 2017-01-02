@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -19,6 +20,7 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly ConsistencyLevel consistencyLevel;
         private readonly Uri commitsLink;
         private readonly Uri storedProcLink;
+        private readonly List<Subscription> subscriptions = new List<Subscription>();
 
         public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName, ConsistencyLevel consistencyLevel)
         {
@@ -141,7 +143,62 @@ namespace SimpleEventStore.AzureDocumentDb
 
         public void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint)
         {
-            throw new NotImplementedException();
+            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
+
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint);
+            subscriptions.Add(subscription);
+
+            subscription.Start();
+        }
+
+        private class Subscription
+        {
+            private readonly IDocumentClient client;
+            private readonly Uri commitsLink;
+            private readonly Action<string, StorageEvent> onNextEvent;
+            private string checkpoint;
+            private Task workerTask;
+
+            public Subscription(IDocumentClient client, Uri commitsLink, Action<string, StorageEvent> onNextEvent, string checkpoint)
+            {
+                this.client = client;
+                this.commitsLink = commitsLink;
+                this.onNextEvent = onNextEvent;
+                this.checkpoint = checkpoint;
+            }
+
+            // TODO: Configure the polling & any retry policy, also allow the subscription to be canclled (use a CancellationToken)
+            public void Start()
+            {
+                workerTask = Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        await ReadEvents();
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                    }
+                });
+            }
+
+            private async Task ReadEvents()
+            {
+                FeedResponse<dynamic> feedResponse;
+                do
+                {
+                    feedResponse = await client.ReadDocumentFeedAsync(commitsLink, new FeedOptions
+                    {
+                        MaxItemCount = 100, // TODO: Make this configurable
+                        RequestContinuation = checkpoint
+                    });
+
+                    foreach (var @event in feedResponse.OfType<Document>())
+                    {
+                        onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
+                    }
+
+                    checkpoint = feedResponse.ResponseContinuation;
+                } while (feedResponse.ResponseContinuation != null);
+            }
         }
     }
 }

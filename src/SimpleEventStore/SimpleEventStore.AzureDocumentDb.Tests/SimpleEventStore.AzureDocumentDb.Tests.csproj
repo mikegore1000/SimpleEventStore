@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="AzureDocumentDbEventStoreAppending.cs" />
     <Compile Include="AzureDocumentDbEventStoreReading.cs" />
+    <Compile Include="AzureDocumentDbEventStoreCatchUpSubscription.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StorageEngineFactory.cs" />
     <Compile Include="SubscriptionSpikes.cs" />
