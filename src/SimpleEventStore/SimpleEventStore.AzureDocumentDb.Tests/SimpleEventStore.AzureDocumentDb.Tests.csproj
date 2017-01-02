@@ -71,7 +71,6 @@
     <Compile Include="AzureDocumentDbEventStoreCatchUpSubscription.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StorageEngineFactory.cs" />
-    <Compile Include="SubscriptionSpikes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
