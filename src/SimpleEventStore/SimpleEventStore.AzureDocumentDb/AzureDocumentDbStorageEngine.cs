@@ -139,7 +139,7 @@ namespace SimpleEventStore.AzureDocumentDb
             }
         }
 
-        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
+        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint)
         {
             throw new NotImplementedException();
         }

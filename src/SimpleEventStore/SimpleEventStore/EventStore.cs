@@ -42,9 +42,9 @@ namespace SimpleEventStore
             return engine.ReadStreamForwards(streamId, startPosition, numberOfEventsToRead);
         }
 
-        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
+        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint = null)
         {
-            engine.SubscribeToAll(onNextEvent);
+            engine.SubscribeToAll(onNextEvent, checkpoint);
         }
     }
 }

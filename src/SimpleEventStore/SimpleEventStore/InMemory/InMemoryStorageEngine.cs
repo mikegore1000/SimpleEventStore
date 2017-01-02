@@ -11,8 +11,8 @@ namespace SimpleEventStore.InMemory
     {
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
         private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
+        private readonly List<Subscription> subscriptions = new List<Subscription>();
         private int polling;
-        private List<Action<string, StorageEvent>> subscriptions = new List<Action<string, StorageEvent>>();
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -49,11 +49,11 @@ namespace SimpleEventStore.InMemory
             return Task.FromResult(streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead));
         }
 
-        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent)
+        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint)
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            this.subscriptions.Add(onNextEvent);
+            this.subscriptions.Add(new Subscription(onNextEvent, checkpoint));
             PollAllEvents();
         }
 
@@ -64,10 +64,39 @@ namespace SimpleEventStore.InMemory
                 foreach (var @event in allEvents)
                 foreach (var subscription in subscriptions)
                 {
-                    subscription?.Invoke(string.Empty, @event);
+                    subscription.Dispatch(@event);
                 }
 
                 Interlocked.Exchange(ref polling, 0);
+            }
+        }
+
+        private class Subscription
+        {
+            private readonly Action<string, StorageEvent> onNewEvent;
+            private readonly string initalCheckpoint;
+            private bool reachedInitialCheckpoint;
+
+            public Subscription(Action<string, StorageEvent> onNewEvent, string checkpoint)
+            {
+                this.onNewEvent = onNewEvent;
+                this.initalCheckpoint = checkpoint;
+                this.reachedInitialCheckpoint = string.IsNullOrWhiteSpace(checkpoint);
+            }
+
+            public void Dispatch(StorageEvent @event)
+            {
+                if (this.reachedInitialCheckpoint)
+                {
+                    this.onNewEvent(@event.EventId.ToString(), @event);
+                }
+                else
+                {
+                    if (@event.EventId.ToString() == initalCheckpoint)
+                    {
+                        this.reachedInitialCheckpoint = true;
+                    }
+                }
             }
         }
     }

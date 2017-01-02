@@ -6,6 +6,7 @@ using Xunit;
 
 namespace SimpleEventStore.Tests
 {
+    // TODO: Consider threading across all tests - will likely fail with any subscription impl that requires a background thread
     public abstract class EventStoreCatchUpSubscription : EventStoreTestBase
     {
         private const int NumberOfStreamsToCreate = 100;
@@ -87,6 +88,37 @@ namespace SimpleEventStore.Tests
             Assert.True(subscription2Called);
         }
 
+        [Fact]
+        public async Task when_a_subscription_is_started_with_a_checkpoint_only_events_newer_than_the_checkpoint_are_received()
+        {
+            string checkpoint = null;
+            StorageEvent receivedEvent = null;
+            var streamId = Guid.NewGuid().ToString();
+            var sut = await CreateEventStore();
+            
+            await sut.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
+            sut.SubscribeToAll((c, e) =>
+            {
+                if (checkpoint == null)
+                {
+                    checkpoint = c;
+                }
+            });
+
+            await sut.AppendToStream(streamId, 1, new EventData(Guid.NewGuid(), new OrderDispatched(streamId)));
+
+            sut.SubscribeToAll((c, e) =>
+            {
+                if (receivedEvent == null)
+                {
+                    receivedEvent = e;
+                }
+            }, checkpoint);
+
+            Assert.NotNull(receivedEvent);
+            Assert.IsType<OrderDispatched>(receivedEvent.EventBody);
+        }
+
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
             for (int i = 0; i < NumberOfStreamsToCreate; i++)
@@ -104,9 +136,5 @@ namespace SimpleEventStore.Tests
                 await sut.AppendToStream(streamId, 0, createdEvent, dispatchedEvent);
             }
         }
-
-        // TODO: Missing tests
-        // 1. Checkpointing
-        // 3. Consider threading across all tests
     }
 }

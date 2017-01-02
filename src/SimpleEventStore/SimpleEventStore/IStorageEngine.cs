@@ -10,6 +10,6 @@ namespace SimpleEventStore
 
         Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead);
 
-        void SubscribeToAll(Action<string, StorageEvent> onNextEvent);
+        void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint);
     }
 }
