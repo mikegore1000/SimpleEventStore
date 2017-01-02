@@ -117,7 +117,12 @@ namespace SimpleEventStore.Tests
             await sut.AppendToStream(
                 streamId,
                 0,
-                new EventData(Guid.NewGuid(), new OrderCreated(streamId)),
+                new EventData(Guid.NewGuid(), new OrderCreated(streamId))
+            );
+
+            await sut.AppendToStream(
+                streamId,
+                1,
                 new EventData(orderDispatchedId, new OrderDispatched(streamId))
             );
 
