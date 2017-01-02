@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -9,6 +8,7 @@ using Microsoft.Azure.Documents.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
+    // TODO: Check subscription doesn't reset to beginning once it's caught up (i.e. DocDb doesn't set the checkpoint to an empty string). It must be doing this based on the existing code
     public class AzureDocumentDbStorageEngine : IStorageEngine
     {
         private const string CommitsCollectionName = "Commits";
