@@ -157,6 +157,8 @@ namespace SimpleEventStore.Tests
 
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
+            var toInsert = new Dictionary<string, EventData[]>();
+
             for (int i = 0; i < NumberOfStreamsToCreate; i++)
             {
                 var streamId = Guid.NewGuid().ToString();
@@ -168,8 +170,12 @@ namespace SimpleEventStore.Tests
                 streamOrder.Enqueue(dispatchedEvent);
 
                 streams.Add(streamId, streamOrder);
+                toInsert.Add(streamId, new [] { createdEvent, dispatchedEvent});
+            }
 
-                await sut.AppendToStream(streamId, 0, createdEvent, dispatchedEvent);
+            foreach (var insert in toInsert)
+            {
+                await sut.AppendToStream(insert.Key, 0, insert.Value);
             }
         }
     }
