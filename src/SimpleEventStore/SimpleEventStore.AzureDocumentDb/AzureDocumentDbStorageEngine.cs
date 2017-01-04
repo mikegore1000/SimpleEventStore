@@ -83,6 +83,17 @@ namespace SimpleEventStore.AzureDocumentDb
             return events.AsReadOnly();
         }
 
+        public void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint)
+        {
+            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
+            Guard.IsNotNull(nameof(onCheckpoint), onCheckpoint);
+
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, onCheckpoint, checkpoint, this.subscriptionOptions);
+            subscriptions.Add(subscription);
+
+            subscription.Start();
+        }
+
         private async Task CreateDatabaseIfItDoesNotExist()
         {
             var databaseExistsQuery = client.CreateDatabaseQuery()
@@ -137,17 +148,6 @@ namespace SimpleEventStore.AzureDocumentDb
                     Body = Scripts.appendToStream
                 });
             }
-        }
-
-        public void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint)
-        {
-            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
-            Guard.IsNotNull(nameof(onCheckpoint), onCheckpoint);
-
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, onCheckpoint, checkpoint, this.subscriptionOptions);
-            subscriptions.Add(subscription);
-
-            subscription.Start();
         }
     }
 }
