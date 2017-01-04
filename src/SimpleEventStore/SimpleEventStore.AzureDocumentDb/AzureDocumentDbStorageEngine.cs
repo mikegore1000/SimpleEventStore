@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
+using Newtonsoft.Json;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
@@ -14,7 +15,7 @@ namespace SimpleEventStore.AzureDocumentDb
         private const string AppendStoredProcedureName = "appendToStream";
         private const string ConcurrencyConflictErrorKey = "Concurrency conflict.";
 
-        private readonly IDocumentClient client;
+        private readonly DocumentClient client;
         private readonly string databaseName;
         private readonly DatabaseOptions databaseOptions;
         private readonly Uri commitsLink;
@@ -22,7 +23,7 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly List<Subscription> subscriptions = new List<Subscription>();
         private readonly SubscriptionOptions subscriptionOptions;
 
-        public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName, DatabaseOptions databaseOptions, SubscriptionOptions subscriptionOptions)
+        public AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, DatabaseOptions databaseOptions, SubscriptionOptions subscriptionOptions)
         {
             this.client = client;
             this.databaseName = databaseName;
@@ -139,11 +140,12 @@ namespace SimpleEventStore.AzureDocumentDb
             }
         }
 
-        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint)
+        public void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint)
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
+            Guard.IsNotNull(nameof(onCheckpoint), onCheckpoint);
 
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions);
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, onCheckpoint, checkpoint, this.subscriptionOptions);
             subscriptions.Add(subscription);
 
             subscription.Start();
@@ -151,19 +153,21 @@ namespace SimpleEventStore.AzureDocumentDb
 
         private class Subscription
         {
-            private readonly IDocumentClient client;
+            private readonly DocumentClient client;
             private readonly Uri commitsLink;
-            private readonly Action<string, StorageEvent> onNextEvent;
+            private readonly Action<StorageEvent> onNextEvent;
+            private readonly Action<string> onCheckpoint;
             private readonly SubscriptionOptions subscriptionOptions;
-            private string checkpoint;            
+            private Dictionary<string, string> checkpoints;
             private Task workerTask;
 
-            public Subscription(IDocumentClient client, Uri commitsLink, Action<string, StorageEvent> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions)
+            public Subscription(DocumentClient client, Uri commitsLink, Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint, SubscriptionOptions subscriptionOptions)
             {
                 this.client = client;
                 this.commitsLink = commitsLink;
                 this.onNextEvent = onNextEvent;
-                this.checkpoint = checkpoint;
+                this.onCheckpoint = onCheckpoint;
+                this.checkpoints = checkpoint == null ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(checkpoint);
                 this.subscriptionOptions = subscriptionOptions;
             }
 
@@ -182,27 +186,44 @@ namespace SimpleEventStore.AzureDocumentDb
 
             private async Task ReadEvents()
             {
-                FeedResponse<dynamic> feedResponse;
+                var partitionKeyRanges = new List<PartitionKeyRange>();
+                FeedResponse<PartitionKeyRange> pkRangesResponse;
+
                 do
                 {
-                    feedResponse = await client.ReadDocumentFeedAsync(commitsLink, new FeedOptions
-                    {
-                        MaxItemCount = this.subscriptionOptions.MaxItemCount,
-                        RequestContinuation = checkpoint
-                    });
+                    pkRangesResponse = await client.ReadPartitionKeyRangeFeedAsync(commitsLink);
+                    partitionKeyRanges.AddRange(pkRangesResponse);
+                }
+                while (pkRangesResponse.ResponseContinuation != null);
 
-                    if (feedResponse.ResponseContinuation != null)
+                foreach (var pkRange in partitionKeyRanges)
+                {
+                    string continuation;
+                    checkpoints.TryGetValue(pkRange.Id, out continuation);
+
+                    IDocumentQuery<Document> query = client.CreateDocumentChangeFeedQuery(
+                        commitsLink,
+                        new ChangeFeedOptions
+                        {
+                            PartitionKeyRangeId = pkRange.Id,
+                            StartFromBeginning = true,
+                            RequestContinuation = continuation,
+                            MaxItemCount = subscriptionOptions.MaxItemCount
+                        });
+
+                    while (query.HasMoreResults)
                     {
-                        checkpoint = feedResponse.ResponseContinuation;
+                        var feedResponse = await query.ExecuteNextAsync<Document>();
+
+                        foreach (var @event in feedResponse)
+                        {
+                            this.onNextEvent(DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
+                        }
+
+                        checkpoints[pkRange.Id] = feedResponse.ResponseContinuation;
+                        this.onCheckpoint(JsonConvert.SerializeObject(checkpoints));
                     }
-
-                    foreach (var @event in feedResponse.OfType<Document>())
-                    {
-                        onNextEvent(checkpoint, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
-                    }
-
-                    
-                } while (feedResponse.ResponseContinuation != null);
+                }
             }
         }
     }

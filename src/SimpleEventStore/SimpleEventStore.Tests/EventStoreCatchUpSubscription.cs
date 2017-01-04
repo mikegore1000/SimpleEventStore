@@ -20,26 +20,28 @@ namespace SimpleEventStore.Tests
 
             await CreateStreams(streams, sut);
 
-            sut.SubscribeToAll((checkpoint, @event) =>
-            {
-                if (streams.ContainsKey(@event.StreamId))
+            sut.SubscribeToAll(
+                @event =>
                 {
-                    var stream = streams[@event.StreamId];
-
-                    Assert.Equal(stream.Peek().EventId, @event.EventId);
-                    stream.Dequeue();
-
-                    if (stream.Count == 0)
+                    if (streams.ContainsKey(@event.StreamId))
                     {
-                        streams.Remove(@event.StreamId);
-                    }
+                        var stream = streams[@event.StreamId];
 
-                    if (streams.Count == 0)
-                    {
-                        completionSource.SetResult(null);
+                        Assert.Equal(stream.Peek().EventId, @event.EventId);
+                        stream.Dequeue();
+
+                        if (stream.Count == 0)
+                        {
+                            streams.Remove(@event.StreamId);
+                        }
+
+                        if (streams.Count == 0)
+                        {
+                            completionSource.SetResult(null);
+                        }
                     }
-                }
-            });
+                }, 
+                checkpoint => {});
 
             await completionSource.Task;
 
@@ -53,26 +55,28 @@ namespace SimpleEventStore.Tests
             var streams = new Dictionary<string, Queue<EventData>>();
             var completionSource = new TaskCompletionSource<object>();
 
-            sut.SubscribeToAll((checkpoint, @event) =>
-            {
-                if (streams.ContainsKey(@event.StreamId))
+            sut.SubscribeToAll(
+                @event =>
                 {
-                    var stream = streams[@event.StreamId];
-
-                    Assert.Equal(stream.Peek().EventId, @event.EventId);
-                    stream.Dequeue();
-
-                    if (stream.Count == 0)
+                    if (streams.ContainsKey(@event.StreamId))
                     {
-                        streams.Remove(@event.StreamId);
-                    }
+                        var stream = streams[@event.StreamId];
 
-                    if (streams.Count == 0)
-                    {
-                        completionSource.SetResult(null);
+                        Assert.Equal(stream.Peek().EventId, @event.EventId);
+                        stream.Dequeue();
+
+                        if (stream.Count == 0)
+                        {
+                            streams.Remove(@event.StreamId);
+                        }
+
+                        if (streams.Count == 0)
+                        {
+                            completionSource.SetResult(null);
+                        }
                     }
-                }
-            });
+                },
+                checkpoint => { });
 
             await CreateStreams(streams, sut);
             await completionSource.Task;
@@ -84,30 +88,41 @@ namespace SimpleEventStore.Tests
         public async Task when_a_subscription_is_started_a_next_event_function_must_be_supplied()
         {
             var sut = await CreateEventStore();
-            Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll(null));
+            Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll(null, (c) => {}));
         }
 
         [Fact]
-        public async Task when_multiple_subscriptions_are_created_they_all_receive_events()
+        public async Task when_a_subscription_is_started_a_checkpoint_function_must_be_supplied()
+        {
+            var sut = await CreateEventStore();
+            Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll((e) => { }, null));
+        }
+
+        [Fact]
+        public async Task when_multiple_subscriptions_are_created_they_receive_events()
         {
             var subscription1Called = new TaskCompletionSource<bool>(false);
             var subscription2Called = new TaskCompletionSource<bool>(false);
 
             var sut = await CreateEventStore();
-            sut.SubscribeToAll((c, e) =>
-            {
-                if (!subscription1Called.Task.IsCompleted)
+            sut.SubscribeToAll(
+                e =>
                 {
-                    subscription1Called.SetResult(true);
-                }
-            });
-            sut.SubscribeToAll((c, e) =>
-            {
-                if (!subscription2Called.Task.IsCompleted)
+                    if (!subscription1Called.Task.IsCompleted)
+                    {
+                        subscription1Called.SetResult(true);
+                    }
+                },
+                c => { });
+            sut.SubscribeToAll(
+                e =>
                 {
-                    subscription2Called.SetResult(true);
-                }
-            });
+                    if (!subscription2Called.Task.IsCompleted)
+                    {
+                        subscription2Called.SetResult(true);
+                    }
+                },
+                c => { });
 
             var streamId = Guid.NewGuid().ToString();
             await sut.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
@@ -138,24 +153,36 @@ namespace SimpleEventStore.Tests
                 new EventData(Guid.NewGuid(), new OrderDispatched(streamId))
             );
 
-            sut.SubscribeToAll((c, e) =>
-            {
-                if (!initialCheckpointObtained.Task.IsCompleted && e.EventId == orderCreatedId)
+            bool gotFirstEvent = false;
+
+            sut.SubscribeToAll(
+                e =>
                 {
-                    initialCheckpointObtained.SetResult(c);
-                }
-            });
+                    if (e.EventId == orderCreatedId)
+                    {
+                        gotFirstEvent = true;
+                    }
+                },
+                c =>
+                {
+                    if (!initialCheckpointObtained.Task.IsCompleted && gotFirstEvent)
+                    {
+                        initialCheckpointObtained.SetResult(c);
+                    }
+                });
 
             await initialCheckpointObtained.Task;
             var checkpoint = initialCheckpointObtained.Task.Result;
 
-            sut.SubscribeToAll((c, e) =>
-            {
-                if (!resumedEventRead.Task.IsCompleted && e.StreamId == streamId)
+            sut.SubscribeToAll(e =>
                 {
-                    resumedEventRead.SetResult(e);
-                }
-            }, checkpoint);
+                    if (!resumedEventRead.Task.IsCompleted && e.StreamId == streamId)
+                    {
+                        resumedEventRead.SetResult(e);
+                    }
+                },
+                c => {},
+                checkpoint);
 
             await resumedEventRead.Task;
 

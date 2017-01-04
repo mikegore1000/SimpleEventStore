@@ -49,11 +49,12 @@ namespace SimpleEventStore.InMemory
             return Task.FromResult(streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead));
         }
 
-        public void SubscribeToAll(Action<string, StorageEvent> onNextEvent, string checkpoint)
+        public void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint)
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
+            Guard.IsNotNull(nameof(onCheckpoint), onCheckpoint);
 
-            this.subscriptions.Add(new Subscription(onNextEvent, checkpoint));
+            this.subscriptions.Add(new Subscription(onNextEvent, onCheckpoint, checkpoint));
             PollAllEvents();
         }
 
@@ -73,13 +74,15 @@ namespace SimpleEventStore.InMemory
 
         private class Subscription
         {
-            private readonly Action<string, StorageEvent> onNewEvent;
+            private readonly Action<StorageEvent> onNewEvent;
+            private readonly Action<string> onCheckpoint;
             private readonly string initalCheckpoint;
             private bool reachedInitialCheckpoint;
 
-            public Subscription(Action<string, StorageEvent> onNewEvent, string checkpoint)
+            public Subscription(Action<StorageEvent> onNewEvent, Action<string> onCheckpoint, string checkpoint)
             {
                 this.onNewEvent = onNewEvent;
+                this.onCheckpoint = onCheckpoint;
                 this.initalCheckpoint = checkpoint;
                 this.reachedInitialCheckpoint = string.IsNullOrWhiteSpace(checkpoint);
             }
@@ -88,7 +91,8 @@ namespace SimpleEventStore.InMemory
             {
                 if (this.reachedInitialCheckpoint)
                 {
-                    this.onNewEvent(@event.EventId.ToString(), @event);
+                    this.onNewEvent(@event);
+                    this.onCheckpoint(@event.EventId.ToString());
                 }
                 else
                 {
