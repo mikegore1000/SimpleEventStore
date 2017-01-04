@@ -94,8 +94,20 @@ namespace SimpleEventStore.Tests
             var subscription2Called = new TaskCompletionSource<bool>(false);
 
             var sut = await CreateEventStore();
-            sut.SubscribeToAll((c, e) => subscription1Called.SetResult(true));
-            sut.SubscribeToAll((c, e) => subscription2Called.SetResult(true));
+            sut.SubscribeToAll((c, e) =>
+            {
+                if (!subscription1Called.Task.IsCompleted)
+                {
+                    subscription1Called.SetResult(true);
+                }
+            });
+            sut.SubscribeToAll((c, e) =>
+            {
+                if (!subscription2Called.Task.IsCompleted)
+                {
+                    subscription2Called.SetResult(true);
+                }
+            });
 
             var streamId = Guid.NewGuid().ToString();
             await sut.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));

@@ -8,6 +8,7 @@ using Microsoft.Azure.Documents.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
+    // TODO: Fix issue with subscriptions resetting their checkpoint back to NULL when the tail of the stream is hit
     public class AzureDocumentDbStorageEngine : IStorageEngine
     {
         private const string CommitsCollectionName = "Commits";
@@ -191,15 +192,12 @@ namespace SimpleEventStore.AzureDocumentDb
                         RequestContinuation = checkpoint
                     });
 
-                    if (feedResponse.Count > 0)
+                    foreach (var @event in feedResponse.OfType<Document>())
                     {
-                        foreach (var @event in feedResponse.OfType<Document>())
-                        {
-                            onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
-                        }
-
-                        checkpoint = feedResponse.ResponseContinuation;
+                        onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
                     }
+
+                    checkpoint = feedResponse.ResponseContinuation;
                 } while (feedResponse.ResponseContinuation != null);
             }
         }
