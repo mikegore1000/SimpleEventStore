@@ -194,12 +194,15 @@ namespace SimpleEventStore.AzureDocumentDb
                         RequestContinuation = checkpoint
                     });
 
-                    foreach (var @event in feedResponse.OfType<Document>())
+                    if (feedResponse.Count > 0)
                     {
-                        onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
-                    }
+                        foreach (var @event in feedResponse.OfType<Document>())
+                        {
+                            onNextEvent(feedResponse.ResponseContinuation, DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
+                        }
 
-                    checkpoint = feedResponse.ResponseContinuation;
+                        checkpoint = feedResponse.ResponseContinuation;
+                    }
                 } while (feedResponse.ResponseContinuation != null);
             }
         }
