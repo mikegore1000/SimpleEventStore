@@ -8,7 +8,6 @@ using Microsoft.Azure.Documents.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
-    // TODO: Check subscription doesn't reset to beginning once it's caught up (i.e. DocDb doesn't set the checkpoint to an empty string). It must be doing this based on the existing code
     public class AzureDocumentDbStorageEngine : IStorageEngine
     {
         private const string CommitsCollectionName = "Commits";
@@ -42,8 +41,6 @@ namespace SimpleEventStore.AzureDocumentDb
 
         public async Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
-            // TODO: Check RequestOptions - especially around consistency levels in case these should be specified
-
             var docs = events.Select(d => DocumentDbStorageEvent.FromStorageEvent(d)).ToList();
 
             try
@@ -170,7 +167,7 @@ namespace SimpleEventStore.AzureDocumentDb
                 this.subscriptionOptions = subscriptionOptions;
             }
 
-            // TODO: Configure the polling & any retry policy, also allow the subscription to be canclled (use a CancellationToken)
+            // TODO: Configure the retry policy, also allow the subscription to be canclled (use a CancellationToken)
             public void Start()
             {
                 workerTask = Task.Run(async () =>
@@ -178,7 +175,7 @@ namespace SimpleEventStore.AzureDocumentDb
                     while (true)
                     {
                         await ReadEvents();
-                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Task.Delay(subscriptionOptions.PollEvery);
                     }
                 });
             }
