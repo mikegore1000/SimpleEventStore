@@ -59,6 +59,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Scripts.resx</DependentUpon>
     </Compile>
+    <Compile Include="Subscription.cs" />
     <Compile Include="SubscriptionOptions.cs" />
   </ItemGroup>
   <ItemGroup>
