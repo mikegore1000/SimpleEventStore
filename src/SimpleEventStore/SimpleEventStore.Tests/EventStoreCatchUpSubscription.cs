@@ -9,7 +9,7 @@ namespace SimpleEventStore.Tests
 {
     public abstract class EventStoreCatchUpSubscription : EventStoreTestBase
     {
-        private const int NumberOfStreamsToCreate = 100;
+        private const int NumberOfStreamsToCreate = 10;
 
         [Fact]
         public async void when_a_subscription_is_started_with_no_checkpoint_token_all_stored_events_are_read_in_stream_order()
@@ -106,29 +106,29 @@ namespace SimpleEventStore.Tests
         }
 
         [Fact]
-        public async Task when_a_subscription_is_started_with_a_checkpoint_only_events_at_the_checkpoint_and_forward_are_received()
+        public async Task when_a_subscription_is_started_with_a_checkpoint_only_events_after_the_checkpoint_are_received()
         {
             var initialCheckpointObtained = new TaskCompletionSource<string>();
             var resumedEventRead = new TaskCompletionSource<StorageEvent>();
             var streamId = Guid.NewGuid().ToString();
             var sut = await CreateEventStore();
-            var orderDispatchedId = Guid.NewGuid();
+            var orderCreatedId = Guid.NewGuid();
 
             await sut.AppendToStream(
                 streamId,
                 0,
-                new EventData(Guid.NewGuid(), new OrderCreated(streamId))
+                new EventData(orderCreatedId, new OrderCreated(streamId))
             );
 
             await sut.AppendToStream(
                 streamId,
                 1,
-                new EventData(orderDispatchedId, new OrderDispatched(streamId))
+                new EventData(Guid.NewGuid(), new OrderDispatched(streamId))
             );
 
             sut.SubscribeToAll((c, e) =>
             {
-                if (!initialCheckpointObtained.Task.IsCompleted && e.EventId == orderDispatchedId)
+                if (!initialCheckpointObtained.Task.IsCompleted && e.EventId == orderCreatedId)
                 {
                     initialCheckpointObtained.SetResult(c);
                 }
@@ -137,19 +137,15 @@ namespace SimpleEventStore.Tests
             await initialCheckpointObtained.Task;
             var checkpoint = initialCheckpointObtained.Task.Result;
 
-            int count = 0;
-
             sut.SubscribeToAll((c, e) =>
             {
-                count++;
-                if (!resumedEventRead.Task.IsCompleted)
+                if (!resumedEventRead.Task.IsCompleted && e.StreamId == streamId)
                 {
                     resumedEventRead.SetResult(e);
                 }
             }, checkpoint);
 
             await resumedEventRead.Task;
-            await Task.Delay(TimeSpan.FromSeconds(10));
 
             Assert.NotNull(resumedEventRead.Task.Result);
             Assert.IsType<OrderDispatched>(resumedEventRead.Task.Result.EventBody);
@@ -157,6 +153,8 @@ namespace SimpleEventStore.Tests
 
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
+            var streamsToCommit = new Dictionary<string, EventData[]>();
+
             for (int i = 0; i < NumberOfStreamsToCreate; i++)
             {
                 var streamId = Guid.NewGuid().ToString();
@@ -169,7 +167,12 @@ namespace SimpleEventStore.Tests
 
                 streams.Add(streamId, streamOrder);
 
-                await sut.AppendToStream(streamId, 0, createdEvent, dispatchedEvent);
+                streamsToCommit.Add(streamId, new [] { createdEvent, dispatchedEvent });
+            }
+
+            foreach (var stream in streamsToCommit)
+            {
+                await sut.AppendToStream(stream.Key, 0, stream.Value);
             }
         }
     }

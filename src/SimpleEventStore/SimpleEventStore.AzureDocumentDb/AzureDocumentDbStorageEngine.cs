@@ -175,7 +175,7 @@ namespace SimpleEventStore.AzureDocumentDb
                     while (true)
                     {
                         await ReadEvents();
-                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        await Task.Delay(TimeSpan.FromSeconds(5));
                     }
                 });
             }
@@ -187,7 +187,7 @@ namespace SimpleEventStore.AzureDocumentDb
                 {
                     feedResponse = await client.ReadDocumentFeedAsync(commitsLink, new FeedOptions
                     {
-                        MaxItemCount = 100, // TODO: Make this configurable
+                        MaxItemCount = 1, // TODO: Make this configurable
                         RequestContinuation = checkpoint
                     });
 
