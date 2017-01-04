@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureDocumentDbStorageEngine.cs" />
+    <Compile Include="DatabaseOptions.cs" />
     <Compile Include="DocumentDbStorageEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts.Designer.cs">
@@ -58,6 +59,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Scripts.resx</DependentUpon>
     </Compile>
+    <Compile Include="SubscriptionOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -17,7 +17,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             var databaseName = "DocumentDbEventStoreTests";
             DocumentClient client = new DocumentClient(new Uri(documentDbUri), authKey);
 
-            var storageEngine = new AzureDocumentDbStorageEngine(client, databaseName, ConsistencyLevel.BoundedStaleness);
+            var storageEngine = new AzureDocumentDbStorageEngine(client, databaseName, new DatabaseOptions(ConsistencyLevel.BoundedStaleness, 400), new SubscriptionOptions(maxItemCount: 1));
             await storageEngine.Initialise();
 
             return storageEngine;

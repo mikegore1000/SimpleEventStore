@@ -17,18 +17,20 @@ namespace SimpleEventStore.AzureDocumentDb
 
         private readonly IDocumentClient client;
         private readonly string databaseName;
-        private readonly ConsistencyLevel consistencyLevel;
+        private readonly DatabaseOptions databaseOptions;
         private readonly Uri commitsLink;
         private readonly Uri storedProcLink;
         private readonly List<Subscription> subscriptions = new List<Subscription>();
+        private readonly SubscriptionOptions subscriptionOptions;
 
-        public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName, ConsistencyLevel consistencyLevel)
+        public AzureDocumentDbStorageEngine(IDocumentClient client, string databaseName, DatabaseOptions databaseOptions, SubscriptionOptions subscriptionOptions)
         {
             this.client = client;
             this.databaseName = databaseName;
-            this.consistencyLevel = consistencyLevel;
+            this.databaseOptions = databaseOptions;
             this.commitsLink = UriFactory.CreateDocumentCollectionUri(databaseName, CommitsCollectionName);
             this.storedProcLink = UriFactory.CreateStoredProcedureUri(databaseName, CommitsCollectionName, AppendStoredProcedureName);
+            this.subscriptionOptions = subscriptionOptions;
         }
 
         public async Task Initialise()
@@ -48,7 +50,7 @@ namespace SimpleEventStore.AzureDocumentDb
             {
                 var result = await this.client.ExecuteStoredProcedureAsync<dynamic>(
                     storedProcLink, 
-                    new RequestOptions { PartitionKey = new PartitionKey(streamId), ConsistencyLevel = this.consistencyLevel },
+                    new RequestOptions { PartitionKey = new PartitionKey(streamId), ConsistencyLevel = this.databaseOptions.ConsistencyLevel },
                     docs);
             }
             catch (DocumentClientException ex)
@@ -115,10 +117,9 @@ namespace SimpleEventStore.AzureDocumentDb
                 collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/body/*"});
                 collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/metadata/*" });
 
-                // TODO: Make this configurable by the consuming app - need to see if this can be updated, if so then we should attempt to update
                 var requestOptions = new RequestOptions
                 {
-                    OfferThroughput = 10100 // Ensure it's partitioned
+                    OfferThroughput = this.databaseOptions.CollectionRequestUnits
                 };
 
                 await client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(databaseName), collection, requestOptions);
@@ -145,7 +146,7 @@ namespace SimpleEventStore.AzureDocumentDb
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint);
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions);
             subscriptions.Add(subscription);
 
             subscription.Start();
@@ -156,15 +157,17 @@ namespace SimpleEventStore.AzureDocumentDb
             private readonly IDocumentClient client;
             private readonly Uri commitsLink;
             private readonly Action<string, StorageEvent> onNextEvent;
-            private string checkpoint;
+            private readonly SubscriptionOptions subscriptionOptions;
+            private string checkpoint;            
             private Task workerTask;
 
-            public Subscription(IDocumentClient client, Uri commitsLink, Action<string, StorageEvent> onNextEvent, string checkpoint)
+            public Subscription(IDocumentClient client, Uri commitsLink, Action<string, StorageEvent> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions)
             {
                 this.client = client;
                 this.commitsLink = commitsLink;
                 this.onNextEvent = onNextEvent;
                 this.checkpoint = checkpoint;
+                this.subscriptionOptions = subscriptionOptions;
             }
 
             // TODO: Configure the polling & any retry policy, also allow the subscription to be canclled (use a CancellationToken)
@@ -187,7 +190,7 @@ namespace SimpleEventStore.AzureDocumentDb
                 {
                     feedResponse = await client.ReadDocumentFeedAsync(commitsLink, new FeedOptions
                     {
-                        MaxItemCount = 1, // TODO: Make this configurable
+                        MaxItemCount = this.subscriptionOptions.MaxItemCount,
                         RequestContinuation = checkpoint
                     });
 
