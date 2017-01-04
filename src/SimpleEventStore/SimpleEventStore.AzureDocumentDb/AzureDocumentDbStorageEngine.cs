@@ -158,7 +158,7 @@ namespace SimpleEventStore.AzureDocumentDb
             private readonly Action<StorageEvent> onNextEvent;
             private readonly Action<string> onCheckpoint;
             private readonly SubscriptionOptions subscriptionOptions;
-            private Dictionary<string, string> checkpoints;
+            private readonly Dictionary<string, string> checkpoints;
             private Task workerTask;
 
             public Subscription(DocumentClient client, Uri commitsLink, Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint, SubscriptionOptions subscriptionOptions)
