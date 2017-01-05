@@ -130,7 +130,7 @@ namespace SimpleEventStore.AzureDocumentDb
                     OfferThroughput = this.databaseOptions.CollectionRequestUnits
                 };
 
-                await client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(databaseName), collection, requestOptions);
+                await client.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions);
             }
         }
 
