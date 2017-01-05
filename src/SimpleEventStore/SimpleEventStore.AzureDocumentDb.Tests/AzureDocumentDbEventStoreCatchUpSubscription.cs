@@ -1,15 +1,12 @@
-﻿using System.Threading.Tasks;
-using SimpleEventStore.Tests;
-using Xunit;
+﻿using SimpleEventStore.Tests;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
-    [Collection("DocumentDb Integration Tests")]
     public class AzureDocumentDbEventStoreCatchUpSubscription : EventStoreCatchUpSubscription
     {
-        protected override Task<IStorageEngine> CreateStorageEngine()
+        protected override IStorageEngine CreateStorageEngine()
         {
-            return StorageEngineFactory.Create();
+            return StorageEngineFactory.Create("CatchUpSubscriptionTests").Result;
         }
     }
 }

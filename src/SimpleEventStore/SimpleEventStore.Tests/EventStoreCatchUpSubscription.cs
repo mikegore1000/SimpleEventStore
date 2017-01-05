@@ -14,7 +14,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async void when_a_subscription_is_started_with_no_checkpoint_token_all_stored_events_are_read_in_stream_order()
         {
-            var sut = await CreateEventStore();
+            var sut = GetEventStore();
             var streams = new Dictionary<string, Queue<EventData>>();
             var completionSource = new TaskCompletionSource<object>();
 
@@ -51,7 +51,7 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async void when_a_subscription_is_started_with_no_checkpoint_token_new_events_written_are_read_in_stream_order()
         {
-            var sut = await CreateEventStore();
+            var sut = GetEventStore();
             var streams = new Dictionary<string, Queue<EventData>>();
             var completionSource = new TaskCompletionSource<object>();
 
@@ -87,14 +87,14 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_a_subscription_is_started_a_next_event_function_must_be_supplied()
         {
-            var sut = await CreateEventStore();
+            var sut = GetEventStore();
             Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll(null, (c) => {}));
         }
 
         [Fact]
         public async Task when_a_subscription_is_started_a_checkpoint_function_must_be_supplied()
         {
-            var sut = await CreateEventStore();
+            var sut = GetEventStore();
             Assert.Throws<ArgumentNullException>(() => sut.SubscribeToAll((e) => { }, null));
         }
 
@@ -104,7 +104,7 @@ namespace SimpleEventStore.Tests
             var subscription1Called = new TaskCompletionSource<bool>(false);
             var subscription2Called = new TaskCompletionSource<bool>(false);
 
-            var sut = await CreateEventStore();
+            var sut = GetEventStore();
             sut.SubscribeToAll(
                 e =>
                 {
@@ -138,7 +138,7 @@ namespace SimpleEventStore.Tests
             var initialCheckpointObtained = new TaskCompletionSource<string>();
             var resumedEventRead = new TaskCompletionSource<StorageEvent>();
             var streamId = Guid.NewGuid().ToString();
-            var sut = await CreateEventStore();
+            var sut = GetEventStore();
             var orderCreatedId = Guid.NewGuid();
 
             await sut.AppendToStream(

@@ -1,15 +1,13 @@
-using System.Threading.Tasks;
-
 namespace SimpleEventStore.Tests
 {
     public abstract class EventStoreTestBase
     {
-        protected async Task<EventStore> CreateEventStore()
+        protected EventStore GetEventStore()
         {
-            var storageEngine = await CreateStorageEngine();
+            var storageEngine = CreateStorageEngine();
             return new EventStore(storageEngine);
         }
 
-        protected abstract Task<IStorageEngine> CreateStorageEngine();
+        protected abstract IStorageEngine CreateStorageEngine();
     }
 }
