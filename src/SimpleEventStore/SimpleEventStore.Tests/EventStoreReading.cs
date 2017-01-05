@@ -16,7 +16,7 @@ namespace SimpleEventStore.Tests
         public async Task when_reading_a_stream_all_events_are_returned()
         {
             var streamId = Guid.NewGuid().ToString();
-            var subject = GetEventStore();
+            var subject = await GetEventStore();
 
             await subject.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
             await subject.AppendToStream(streamId, 1, new EventData(Guid.NewGuid(), new OrderDispatched(streamId)));
@@ -34,7 +34,7 @@ namespace SimpleEventStore.Tests
         [InlineData(" ")]
         public async Task when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
-            var eventStore = GetEventStore();
+            var eventStore = await GetEventStore();
             await Assert.ThrowsAsync<ArgumentException>(async () => await eventStore.ReadStreamForwards(streamId));
         }
 
@@ -42,7 +42,7 @@ namespace SimpleEventStore.Tests
         public async Task when_reading_a_stream_only_the_required_events_are_returned()
         {
             var streamId = Guid.NewGuid().ToString();
-            var subject = GetEventStore();
+            var subject = await GetEventStore();
 
             await subject.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
             await subject.AppendToStream(streamId, 1, new EventData(Guid.NewGuid(), new OrderDispatched(streamId)));

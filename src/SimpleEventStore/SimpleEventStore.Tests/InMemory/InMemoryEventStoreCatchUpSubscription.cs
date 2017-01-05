@@ -1,12 +1,13 @@
-﻿using SimpleEventStore.InMemory;
+﻿using System.Threading.Tasks;
+using SimpleEventStore.InMemory;
 
 namespace SimpleEventStore.Tests.InMemory
 {
     public class InMemoryEventStoreCatchUpSubscription : EventStoreCatchUpSubscription
     {
-        protected override IStorageEngine CreateStorageEngine()
+        protected override Task<IStorageEngine> CreateStorageEngine()
         {
-            return new InMemoryStorageEngine();
+            return Task.FromResult((IStorageEngine)new InMemoryStorageEngine());
         }
     }
 }

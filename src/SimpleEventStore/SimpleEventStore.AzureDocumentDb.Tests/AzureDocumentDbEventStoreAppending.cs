@@ -1,13 +1,13 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 using SimpleEventStore.Tests;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
     public class AzureDocumentDbEventStoreAppending : EventStoreAppending
     {
-        protected override IStorageEngine CreateStorageEngine()
+        protected override Task<IStorageEngine> CreateStorageEngine()
         {
-            return StorageEngineFactory.Create("AppendingTests").Result;
+            return StorageEngineFactory.Create("AppendingTests"); ;
         }
     }
 }
