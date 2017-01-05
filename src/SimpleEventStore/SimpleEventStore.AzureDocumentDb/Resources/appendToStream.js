@@ -4,7 +4,11 @@ function appendToStream(documents) {
     var collectionLink = collection.getSelfLink();
     var streamId = documents[0].streamId;
     var expectedEventNumber = documents[0].eventNumber - 1;
-    var concurrencyQuery = 'SELECT TOP 1 c.eventNumber FROM Commits c WHERE c.streamId = "' + streamId + '" ORDER BY c.eventNumber DESC';
+
+    var concurrencyQuery = {
+        query: "SELECT TOP 1 c.eventNumber FROM Commits c WHERE c.streamId = @streamId ORDER BY c.eventNumber DESC",
+        parameters: [{ name: "@streamId", value: streamId }]
+    };
 
     var accepted = collection.queryDocuments(collectionLink, concurrencyQuery, {}, onConcurrencyQueryCompleted);
 
