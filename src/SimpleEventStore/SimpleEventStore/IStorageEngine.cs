@@ -8,7 +8,7 @@ namespace SimpleEventStore
     {
         Task AppendToStream(string streamId, IEnumerable<StorageEvent> events);
 
-        Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead);
+        Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead);
 
         void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint);
     }

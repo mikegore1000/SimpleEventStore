@@ -44,9 +44,10 @@ namespace SimpleEventStore.InMemory
             }
         }
 
-        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
+        public Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
-            return Task.FromResult(streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead));
+            IReadOnlyCollection<StorageEvent> result = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
+            return Task.FromResult(result);
         }
 
         public void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint)

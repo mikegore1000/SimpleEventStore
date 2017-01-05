@@ -28,14 +28,14 @@ namespace SimpleEventStore
             return engine.AppendToStream(streamId, storageEvents);
         }
 
-        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId)
+        public Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId)
         {
             Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
 
             return engine.ReadStreamForwards(streamId, 1, Int32.MaxValue);
         }
 
-        public Task<IEnumerable<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
+        public Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
             Guard.IsNotNullOrEmpty(nameof(streamId), streamId);
 
