@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore.InMemory
@@ -62,7 +61,6 @@ namespace SimpleEventStore.InMemory
             private readonly IEnumerable<StorageEvent> allStream;
             private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent;
             private string initialCheckpoint;
-            private bool reachedInitialCheckpoint;
             private int currentPosition;
             private Task workerTask;
 
@@ -95,7 +93,6 @@ namespace SimpleEventStore.InMemory
 
                     if (this.initialCheckpoint == null || this.initialCheckpoint == @event.EventId.ToString())
                     {
-                        this.reachedInitialCheckpoint = true;
                         dispatchEvents = this.initialCheckpoint == null;
                     }
 
