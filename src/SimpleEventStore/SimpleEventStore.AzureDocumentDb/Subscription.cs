@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -12,18 +13,16 @@ namespace SimpleEventStore.AzureDocumentDb
     {
         private readonly DocumentClient client;
         private readonly Uri commitsLink;
-        private readonly Action<StorageEvent> onNextEvent;
-        private readonly Action<string> onCheckpoint;
+        private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent;
         private readonly SubscriptionOptions subscriptionOptions;
         private readonly Dictionary<string, string> checkpoints;
         private Task workerTask;
 
-        public Subscription(DocumentClient client, Uri commitsLink, Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint, SubscriptionOptions subscriptionOptions)
+        public Subscription(DocumentClient client, Uri commitsLink, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions)
         {
             this.client = client;
             this.commitsLink = commitsLink;
             this.onNextEvent = onNextEvent;
-            this.onCheckpoint = onCheckpoint;
             this.checkpoints = checkpoint == null ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(checkpoint);
             this.subscriptionOptions = subscriptionOptions;
         }
@@ -71,14 +70,29 @@ namespace SimpleEventStore.AzureDocumentDb
                 while (query.HasMoreResults)
                 {
                     var feedResponse = await query.ExecuteNextAsync<Document>();
+                    var events = new List<StorageEvent>();
+                    string initialCheckpointValue;
 
                     foreach (var @event in feedResponse)
                     {
-                        this.onNextEvent(DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
+                        events.Add(DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
                     }
 
-                    checkpoints[pkRange.Id] = feedResponse.ResponseContinuation;
-                    this.onCheckpoint(JsonConvert.SerializeObject(checkpoints));
+                    checkpoints.TryGetValue(pkRange.Id, out initialCheckpointValue);
+
+                    try
+                    {
+                        checkpoints[pkRange.Id] = feedResponse.ResponseContinuation;
+                        this.onNextEvent(events.AsReadOnly(), JsonConvert.SerializeObject(checkpoints));
+                    }
+                    catch(Exception)
+                    {
+                        if (initialCheckpointValue != null)
+                        {
+                            checkpoints[pkRange.Id] = initialCheckpointValue;
+                        }
+                        throw;
+                    }
                 }
             }
         }

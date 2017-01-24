@@ -83,12 +83,11 @@ namespace SimpleEventStore.AzureDocumentDb
             return events.AsReadOnly();
         }
 
-        public void SubscribeToAll(Action<StorageEvent> onNextEvent, Action<string> onCheckpoint, string checkpoint)
+        public void SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint)
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
-            Guard.IsNotNull(nameof(onCheckpoint), onCheckpoint);
 
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, onCheckpoint, checkpoint, this.subscriptionOptions);
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions);
             subscriptions.Add(subscription);
 
             subscription.Start();
