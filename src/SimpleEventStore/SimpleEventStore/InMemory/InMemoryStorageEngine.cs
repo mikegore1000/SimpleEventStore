@@ -12,7 +12,6 @@ namespace SimpleEventStore.InMemory
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
         private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
         private readonly List<Subscription> subscriptions = new List<Subscription>();
-        private int polling;
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -32,7 +31,6 @@ namespace SimpleEventStore.InMemory
 
                 streams[streamId].AddRange(events);
                 AddEventsToAllStream(events);
-                PollAllEvents();
             });
         }
 
@@ -54,48 +52,57 @@ namespace SimpleEventStore.InMemory
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            this.subscriptions.Add(new Subscription(onNextEvent, checkpoint));
-            PollAllEvents();
-        }
-
-        private void PollAllEvents()
-        {
-            if (Interlocked.CompareExchange(ref polling, 1, 0) == 0)
-            {
-                foreach (var @event in allEvents)
-                foreach (var subscription in subscriptions)
-                {
-                    subscription.Dispatch(@event);
-                }
-
-                Interlocked.Exchange(ref polling, 0);
-            }
+            var subscription = new Subscription(this.allEvents, onNextEvent, checkpoint);
+            this.subscriptions.Add(subscription);
+            subscription.Start();
         }
 
         private class Subscription
         {
+            private readonly IEnumerable<StorageEvent> allStream;
             private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent;
-            private readonly string initalCheckpoint;
+            private string initialCheckpoint;
             private bool reachedInitialCheckpoint;
+            private int currentPosition;
+            private Task workerTask;
 
-            public Subscription(Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent, string checkpoint)
+            public Subscription(IEnumerable<StorageEvent> allStream, Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent, string checkpoint)
             {
+                this.allStream = allStream;
                 this.onNewEvent = onNewEvent;
-                this.initalCheckpoint = checkpoint;
-                this.reachedInitialCheckpoint = string.IsNullOrWhiteSpace(checkpoint);
+                this.initialCheckpoint = checkpoint;
             }
 
-            public void Dispatch(StorageEvent @event)
+            public void Start()
             {
-                if (this.reachedInitialCheckpoint)
+                workerTask = Task.Run(async () =>
                 {
-                    this.onNewEvent(new[] { @event }, @event.EventId.ToString());
-                }
-                else
+                    while (true)
+                    {
+                        ReadEvents();
+                        await Task.Delay(500);
+                    }
+                });
+            }
+
+            private void ReadEvents()
+            {
+                var snapshot = allStream.Skip(this.currentPosition).ToList();
+
+                foreach (var @event in snapshot)
                 {
-                    if (@event.EventId.ToString() == initalCheckpoint)
+                    bool dispatchEvents = true;
+
+                    if (this.initialCheckpoint == null || this.initialCheckpoint == @event.EventId.ToString())
                     {
                         this.reachedInitialCheckpoint = true;
+                        dispatchEvents = this.initialCheckpoint == null;
+                    }
+
+                    if(dispatchEvents)
+                    {
+                        this.onNewEvent(new[] { @event }, @event.EventId.ToString());
+                        this.currentPosition++;
                     }
                 }
             }

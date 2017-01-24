@@ -152,8 +152,7 @@ namespace SimpleEventStore.Tests
                 {
                     foreach (var e in events)
                     {
-                        // TODO: Don't need the task completion check.  Is actually masking a bug in the in-memory version
-                        if (e.EventId == orderCreatedId && !initialCheckpointObtained.Task.IsCompleted)
+                        if (e.EventId == orderCreatedId)
                         {
                             initialCheckpointObtained.SetResult(c);
                         }
