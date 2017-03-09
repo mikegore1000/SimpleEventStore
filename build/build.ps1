@@ -44,7 +44,9 @@ Param(
     [string]$Target = "Default",
     [ValidateSet("Release", "Debug")]
     [string]$Configuration = "Release",
-    [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
+    [string]$Uri,
+    [string]$AuthKey,
+    [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]    
     [string]$Verbosity = "Verbose",
     [switch]$Experimental,
     [Alias("DryRun","Noop")]
@@ -185,5 +187,5 @@ if (!(Test-Path $CAKE_EXE)) {
 
 # Start Cake
 Write-Host "Running build script..."
-Invoke-Expression "& `"$CAKE_EXE`" `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" $UseMono $UseDryRun $UseExperimental $ScriptArgs"
+Invoke-Expression "& `"$CAKE_EXE`" `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" -uri=$Uri -authKey=$AuthKey $UseMono $UseDryRun $UseExperimental $ScriptArgs"
 exit $LASTEXITCODE
