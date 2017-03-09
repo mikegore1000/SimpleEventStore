@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SimpleEventStore.AzureDocumentDb")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Provides a DocumentDB storage engine for Simple Event Store (SES)")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("ASOS")]
 [assembly: AssemblyProduct("SimpleEventStore.AzureDocumentDb")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]

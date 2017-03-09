@@ -49,6 +49,35 @@ Task("Run-Unit-Tests")
     XUnit2("../src/**/bin/" + configuration + "/*.Tests.dll");
 });
 
+Task("Package")
+    .IsDependentOn("Run-Unit-Tests")
+    .Does(() => 
+{
+    NuGetPack("./../src/SimpleEventStore/SimpleEventStore/SimpleEventStore.csproj", new NuGetPackSettings() {
+        ArgumentCustomization = args => args.Append("-Prop Configuration=" + configuration)
+    });
+
+    NuGetPack("./../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb/SimpleEventStore.AzureDocumentDb.csproj", new NuGetPackSettings() {
+        ArgumentCustomization = args => args.Append("-Prop Configuration=" + configuration)
+    });
+});
+
+
+Task("Deploy")
+    .IsDependentOn("Package")
+    .Does(() => 
+{
+    var nugetSource = Argument<string>("nugetSource");
+    var nugetApiKey = Argument<string>("nugetApiKey");
+
+    var package = GetFiles("./*.nupkg");
+
+    NuGetPush(package, new NuGetPushSettings {
+        Source = nugetSource,
+        ApiKey = nugetApiKey
+    });
+});
+
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
