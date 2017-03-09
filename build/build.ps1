@@ -47,7 +47,7 @@ Param(
     [string]$Uri,
     [string]$AuthKey,
     [string]$NugetSource,
-    [string]$NugetApiKeySource,
+    [string]$NugetApiKey,
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]    
     [string]$Verbosity = "Verbose",
     [switch]$Experimental,
