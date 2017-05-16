@@ -10,16 +10,12 @@ namespace SimpleEventStore
 
         public object Metadata { get; private set; }
 
-        public EventData(Guid eventId, object body)
+        public EventData(Guid eventId, object body, object metadata = null)
         {
             Guard.IsNotNull(nameof(body), body);
 
             EventId = eventId;
             Body = body;
-        }
-
-        public EventData(Guid eventId, object body, object metadata) : this(eventId, body)
-        {
             Metadata = metadata;
         }
     }
