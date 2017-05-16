@@ -12,7 +12,6 @@ namespace SimpleEventStore
 
         public EventData(Guid eventId, object body)
         {
-            Guard.IsNotNull(nameof(eventId), eventId);
             Guard.IsNotNull(nameof(body), body);
 
             EventId = eventId;
