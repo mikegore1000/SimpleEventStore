@@ -70,6 +70,7 @@
     <Compile Include="InMemory\InMemoryEventStoreReading.cs" />
     <Compile Include="Metadata\TestMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StorageEventTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
