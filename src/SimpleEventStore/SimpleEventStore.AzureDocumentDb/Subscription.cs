@@ -42,15 +42,7 @@ namespace SimpleEventStore.AzureDocumentDb
 
         private async Task ReadEvents()
         {
-            var partitionKeyRanges = new List<PartitionKeyRange>();
-            FeedResponse<PartitionKeyRange> pkRangesResponse;
-
-            do
-            {
-                pkRangesResponse = await client.ReadPartitionKeyRangeFeedAsync(commitsLink);
-                partitionKeyRanges.AddRange(pkRangesResponse);
-            }
-            while (pkRangesResponse.ResponseContinuation != null);
+            var partitionKeyRanges = await GetPartitionKeyRanges();
 
             foreach (var pkRange in partitionKeyRanges)
             {
@@ -95,6 +87,26 @@ namespace SimpleEventStore.AzureDocumentDb
                     }
                 }
             }
+        }
+
+        private async Task<IEnumerable<PartitionKeyRange>> GetPartitionKeyRanges()
+        {
+            var partitionKeyRanges = new List<PartitionKeyRange>();
+            FeedResponse<PartitionKeyRange> pkRangesResponse;
+            string continuationToken = null;
+
+            do
+            {
+                pkRangesResponse = await client.ReadPartitionKeyRangeFeedAsync(commitsLink, new FeedOptions
+                {
+                    RequestContinuation = continuationToken
+                });
+                partitionKeyRanges.AddRange(pkRangesResponse);
+                continuationToken = pkRangesResponse.ResponseContinuation;
+            }
+            while (continuationToken != null);
+
+            return partitionKeyRanges;
         }
     }
 }
