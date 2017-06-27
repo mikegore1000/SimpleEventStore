@@ -7,6 +7,7 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var uri = Argument("uri", "https://localhost:8081/");
 var authKey = Argument("authKey", "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
+var consistencyLevel = Argument("consistencyLevel", "BoundedStaleness");
 
 //////////////////////////////////////////////////////////////////////
 // PREPARATION
@@ -39,6 +40,7 @@ Task("Transform-Unit-Test-Config")
 {
     XmlPoke(documentDbTestConfigFile, "/configuration/appSettings/add[@key = 'Uri']/@value", uri);
     XmlPoke(documentDbTestConfigFile, "/configuration/appSettings/add[@key = 'AuthKey']/@value", authKey);
+    XmlPoke(documentDbTestConfigFile, "/configuration/appSettings/add[@key = 'ConsistencyLevel']/@value", consistencyLevel);
 });
 
 Task("Run-Unit-Tests")
