@@ -10,6 +10,7 @@
 
 namespace SimpleEventStore.AzureDocumentDb {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace SimpleEventStore.AzureDocumentDb {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SimpleEventStore.AzureDocumentDb.Scripts", typeof(Scripts).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SimpleEventStore.AzureDocumentDb.Scripts", typeof(Scripts).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -65,16 +66,15 @@ namespace SimpleEventStore.AzureDocumentDb {
         ///    var context = getContext();
         ///    var collection = context.getCollection();
         ///    var collectionLink = collection.getSelfLink();
+        ///    var streamId = documents[0].streamId;
+        ///    var expectedEventNumber = documents[0].eventNumber - 1;
         ///
-        ///    var index = 0;
+        ///    var concurrencyQuery = {
+        ///        query: &quot;SELECT TOP 1 c.eventNumber FROM Commits c WHERE c.streamId = @streamId ORDER BY c.eventNumber DESC&quot;,
+        ///        parameters: [{ name: &quot;@streamId&quot;, value: streamId }]
+        ///    };
         ///
-        ///    createDocument(documents[index]);
-        ///
-        ///    // NOTE: isAccepted states if the write is going to be processed
-        ///    function createDocument(document) {
-        ///        var accepted = collection.createDocument(collectionLink, document, onDocumentCreated);
-        ///
-        ///        if (!accepted) throw new Error(&quot;Document not accepted for creation.&quot;);        /// [rest of string was truncated]&quot;;.
+        ///    var accepted [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string appendToStream {
             get {

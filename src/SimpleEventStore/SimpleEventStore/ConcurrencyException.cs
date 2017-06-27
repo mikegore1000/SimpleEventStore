@@ -1,9 +1,7 @@
 using System;
-using System.Runtime.Serialization;
 
 namespace SimpleEventStore
 {
-    [Serializable]
     public class ConcurrencyException : Exception
     {
         //
@@ -22,12 +20,6 @@ namespace SimpleEventStore
         }
 
         public ConcurrencyException(string message, Exception inner) : base(message, inner)
-        {
-        }
-
-        protected ConcurrencyException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
         {
         }
     }

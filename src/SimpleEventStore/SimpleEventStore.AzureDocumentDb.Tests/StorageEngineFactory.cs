@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Configuration;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Extensions.Configuration;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
@@ -10,9 +11,14 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
     {
         internal static async Task<IStorageEngine> Create(string databaseName)
         {
-            var documentDbUri = ConfigurationManager.AppSettings["Uri"];
-            var authKey = ConfigurationManager.AppSettings["AuthKey"];
-            var consistencyLevel = ConfigurationManager.AppSettings["ConsistencyLevel"];
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            var documentDbUri = config["Uri"];
+            var authKey = config["AuthKey"];
+            var consistencyLevel = config["ConsistencyLevel"];
             ConsistencyLevel consistencyLevelEnum;
 
             if(!Enum.TryParse(consistencyLevel, true, out consistencyLevelEnum))
