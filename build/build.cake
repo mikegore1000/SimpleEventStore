@@ -68,9 +68,6 @@ Task("Run-Unit-Tests")
             throw new Exception("Unit test failure for test project " + testPath);
         }
     }
-    //DotnetCoreTest();
-	// TODO: Use dotnet CLI tools
-    // XUnit2("../src/**/bin/" + configuration + "/*.Tests.dll");
 });
 
 Task("Package")
