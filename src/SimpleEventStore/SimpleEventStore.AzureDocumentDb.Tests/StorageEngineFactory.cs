@@ -15,7 +15,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             var consistencyLevel = ConfigurationManager.AppSettings["ConsistencyLevel"];
             ConsistencyLevel consistencyLevelEnum;
 
-            if(!Enum.TryParse<ConsistencyLevel>(consistencyLevel, true, out consistencyLevelEnum))
+            if(!Enum.TryParse(consistencyLevel, true, out consistencyLevelEnum))
             {
                 throw new Exception($"The ConsistencyLevel value {consistencyLevel} is not supported");
             }
