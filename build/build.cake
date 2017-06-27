@@ -16,18 +16,28 @@ var consistencyLevel = Argument("consistencyLevel", "BoundedStaleness");
 //////////////////////////////////////////////////////////////////////
 
 // Define directories.
-var solutionFile = "../src/SimpleEventStore/SimpleEventStore.sln";
-var documentDbTestConfigFile = File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appSettings.json");
+var solutionDir = "../src/SimpleEventStore/";
+var solutionFile = solutionDir + "SimpleEventStore.sln";
+var documentDbTestConfigFile = File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json");
+var testDirs = GetDirectories(solutionDir + "*.Tests");
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
 
-Task("Build")
+Task("Restore-Packages")
     .Does(() =>
 {
-    // TODO: Use dotnet CLI tools
-    MSBuild(solutionFile, settings => settings.SetConfiguration(configuration).UseToolVersion(MSBuildToolVersion.VS2017));
+    DotNetCoreRestore(solutionDir);
+});
+
+Task("Build")
+    .IsDependentOn("Restore-Packages")
+    .Does(() =>
+{
+    DotNetCoreBuild(solutionFile, new DotNetCoreBuildSettings {
+        Configuration = configuration
+    });
 });
 
 Task("Transform-Unit-Test-Config")
@@ -46,8 +56,21 @@ Task("Run-Unit-Tests")
     .IsDependentOn("Transform-Unit-Test-Config")
     .Does(() =>
 {
+    foreach(var testPath in testDirs)
+    {
+        var returnCode = StartProcess("dotnet", new ProcessSettings {
+            Arguments = "xunit -c " + configuration + " --no-build",
+            WorkingDirectory = testPath
+        });
+
+        if(returnCode != 0)
+        {
+            throw new Exception("Unit test failure for test project " + testPath);
+        }
+    }
+    //DotnetCoreTest();
 	// TODO: Use dotnet CLI tools
-    XUnit2("../src/**/bin/" + configuration + "/*.Tests.dll");
+    // XUnit2("../src/**/bin/" + configuration + "/*.Tests.dll");
 });
 
 Task("Package")

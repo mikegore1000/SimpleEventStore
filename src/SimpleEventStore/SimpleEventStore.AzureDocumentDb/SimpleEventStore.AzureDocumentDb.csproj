@@ -10,17 +10,7 @@
     <ProjectReference Include="..\SimpleEventStore\SimpleEventStore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Scripts.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Scripts.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Scripts.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Scripts.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\AppendToStream.js" />
   </ItemGroup>
   <PropertyGroup>
     <Title>SimpleEventStore.AzureDocumentDb</Title>
@@ -28,7 +18,7 @@
     <Company>ASOS</Company>
     <Copyright>Copyright ASOS ©2016</Copyright>
     <Product>SimpleEventStore.AzureDocumentDb</Product>
-    <PackageId>Asos.SimpleEventStore</PackageId>
+    <PackageId>Asos.SimpleEventStore.AzureDocumentDb</PackageId>
     <Authors></Authors>
     <PackageTags>eventsourcing documentdb azure</PackageTags>
     <PackageProjectUrl>https://github.com/ASOS/SimpleEventStore</PackageProjectUrl>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -144,7 +145,7 @@ namespace SimpleEventStore.AzureDocumentDb
                 await client.CreateStoredProcedureAsync(commitsLink, new StoredProcedure
                 {
                     Id = AppendStoredProcedureName,
-                    Body = Scripts.appendToStream
+                    Body = Resources.GetString("AppendToStream.js")
                 });
             }
         }
