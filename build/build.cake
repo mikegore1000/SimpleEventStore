@@ -1,4 +1,6 @@
 #tool "nuget:?package=xunit.runner.console"
+#addin "Cake.Json"
+
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
@@ -15,32 +17,28 @@ var consistencyLevel = Argument("consistencyLevel", "BoundedStaleness");
 
 // Define directories.
 var solutionFile = "../src/SimpleEventStore/SimpleEventStore.sln";
-var documentDbTestConfigFile = File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/SimpleEventStore.AzureDocumentDb.Tests.dll.config");
+var documentDbTestConfigFile = File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appSettings.json");
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
 
-Task("Restore-NuGet-Packages")
-    .Does(() =>
-{
-    NuGetRestore(solutionFile);
-});
-
 Task("Build")
-    .IsDependentOn("Restore-NuGet-Packages")
     .Does(() =>
 {
-    // Use MSBuild
-    MSBuild(solutionFile, settings => settings.SetConfiguration(configuration));
+    // TODO: Use dotnet CLI tools
+    MSBuild(solutionFile, settings => settings.SetConfiguration(configuration).UseToolVersion(MSBuildToolVersion.VS2017));
 });
 
 Task("Transform-Unit-Test-Config")
     .Does(() =>
 {
-    XmlPoke(documentDbTestConfigFile, "/configuration/appSettings/add[@key = 'Uri']/@value", uri);
-    XmlPoke(documentDbTestConfigFile, "/configuration/appSettings/add[@key = 'AuthKey']/@value", authKey);
-    XmlPoke(documentDbTestConfigFile, "/configuration/appSettings/add[@key = 'ConsistencyLevel']/@value", consistencyLevel);
+	var configJson = ParseJsonFromFile(documentDbTestConfigFile);
+	configJson["Uri"] = uri;
+	configJson["AuthKey"] = authKey;
+	configJson["ConsistencyLevel"] = consistencyLevel;
+
+	SerializeJsonToFile(documentDbTestConfigFile, configJson);
 });
 
 Task("Run-Unit-Tests")
@@ -48,6 +46,7 @@ Task("Run-Unit-Tests")
     .IsDependentOn("Transform-Unit-Test-Config")
     .Does(() =>
 {
+	// TODO: Use dotnet CLI tools
     XUnit2("../src/**/bin/" + configuration + "/*.Tests.dll");
 });
 
