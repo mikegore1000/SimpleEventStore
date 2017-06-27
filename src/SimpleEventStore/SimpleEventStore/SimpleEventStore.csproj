@@ -13,5 +13,7 @@
     <Authors></Authors>
     <PackageTags>eventsourcing documentdb azure</PackageTags>
     <PackageProjectUrl>https://github.com/ASOS/SimpleEventStore</PackageProjectUrl>
+    <Version>1.0.0</Version>
+    <PackageVersion>1.0.0</PackageVersion>
   </PropertyGroup>
 </Project>

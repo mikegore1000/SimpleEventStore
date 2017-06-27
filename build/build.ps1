@@ -48,6 +48,7 @@ Param(
     [string]$Uri = "https://localhost:8081/",
     [string]$AuthKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
     [string]$ConsistencyLevel = "BoundedStaleness",
+    [string]$BuildVersion = "1.0.0",
     [string]$NugetSource,
     [string]$NugetApiKey,
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]    
@@ -191,5 +192,5 @@ if (!(Test-Path $CAKE_EXE)) {
 
 # Start Cake
 Write-Host "Running build script..."
-Invoke-Expression "& `"$CAKE_EXE`" `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" -uri=$Uri -authKey=$AuthKey -consistencyLevel=$ConsistencyLevel -nugetSource=$NugetSource -nugetApiKey=$NugetApiKey $UseMono $UseDryRun $UseExperimental $ScriptArgs"
+Invoke-Expression "& `"$CAKE_EXE`" `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" -uri=$Uri -authKey=$AuthKey -consistencyLevel=$ConsistencyLevel -buildVersion=`"$BuildVersion`" -nugetSource=$NugetSource -nugetApiKey=$NugetApiKey $UseMono $UseDryRun $UseExperimental $ScriptArgs"
 exit $LASTEXITCODE

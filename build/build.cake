@@ -10,6 +10,7 @@ var configuration = Argument("configuration", "Release");
 var uri = Argument("uri", "https://localhost:8081/");
 var authKey = Argument("authKey", "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
 var consistencyLevel = Argument("consistencyLevel", "BoundedStaleness");
+var buildVersion = Argument("buildVersion", "1.0.0");
 
 //////////////////////////////////////////////////////////////////////
 // PREPARATION
@@ -20,6 +21,7 @@ var solutionDir = "../src/SimpleEventStore/";
 var solutionFile = solutionDir + "SimpleEventStore.sln";
 var documentDbTestConfigFile = File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json");
 var testDirs = GetDirectories(solutionDir + "*.Tests");
+var outputDir = "./nuget";
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -31,12 +33,21 @@ Task("Restore-Packages")
     DotNetCoreRestore(solutionDir);
 });
 
+Task("Clean")
+    .Does(() => 
+{
+    CleanDirectory(outputDir);
+});
+
 Task("Build")
+    .IsDependentOn("Clean")
     .IsDependentOn("Restore-Packages")
     .Does(() =>
 {
     DotNetCoreBuild(solutionFile, new DotNetCoreBuildSettings {
-        Configuration = configuration
+        Configuration = configuration,
+        NoIncremental = true,
+        ArgumentCustomization = args => args.Append("/p:Version=" + buildVersion)
     });
 });
 
@@ -71,16 +82,19 @@ Task("Run-Unit-Tests")
 });
 
 Task("Package")
+    .IsDependentOn("Build")
     .IsDependentOn("Run-Unit-Tests")
     .Does(() => 
 {
-    NuGetPack("./../src/SimpleEventStore/SimpleEventStore/SimpleEventStore.csproj", new NuGetPackSettings() {
-        ArgumentCustomization = args => args.Append("-Prop Configuration=" + configuration)
-    });
+    var settings = new DotNetCorePackSettings {
+        Configuration = configuration,
+        NoBuild = true,
+        OutputDirectory = outputDir,
+        ArgumentCustomization = args => args.Append("/p:PackageVersion=" + buildVersion)
+    };
 
-    NuGetPack("./../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb/SimpleEventStore.AzureDocumentDb.csproj", new NuGetPackSettings() {
-        ArgumentCustomization = args => args.Append("-Prop Configuration=" + configuration)
-    });
+    DotNetCorePack("./../src/SimpleEventStore/SimpleEventStore/", settings);
+    DotNetCorePack("./../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb/", settings);
 });
 
 
