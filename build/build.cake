@@ -105,7 +105,7 @@ Task("Deploy")
     var nugetSource = Argument<string>("nugetSource");
     var nugetApiKey = Argument<string>("nugetApiKey");
 
-    var package = GetFiles("./*.nupkg");
+    var package = GetFiles(outputDir + "/*.nupkg");
 
     NuGetPush(package, new NuGetPushSettings {
         Source = nugetSource,
