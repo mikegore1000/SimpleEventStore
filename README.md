@@ -75,7 +75,7 @@ var storageEngine = new AzureDocumentDbStorageEngine(
 		maxItemCount: 1, 
 		pollEvery: TimeSpan.FromSeconds(0.5)));
 
-eventStore.Initialise();
+await storageEngine.Initialise();
 ```
 The DatabaseOptions allow you to specify the consistency level of the database along with the default number of RUs.  
 
