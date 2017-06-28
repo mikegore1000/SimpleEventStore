@@ -19,7 +19,10 @@ var buildVersion = Argument("buildVersion", "1.0.0");
 // Define directories.
 var solutionDir = "../src/SimpleEventStore/";
 var solutionFile = solutionDir + "SimpleEventStore.sln";
-var documentDbTestConfigFile = File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json");
+var documentDbTestConfigFiles = new [] {
+	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json"),
+	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/net461/appsettings.json")
+};
 var testDirs = GetDirectories(solutionDir + "*.Tests");
 var outputDir = "./nuget";
 
@@ -54,12 +57,15 @@ Task("Build")
 Task("Transform-Unit-Test-Config")
     .Does(() =>
 {
-	var configJson = ParseJsonFromFile(documentDbTestConfigFile);
-	configJson["Uri"] = uri;
-	configJson["AuthKey"] = authKey;
-	configJson["ConsistencyLevel"] = consistencyLevel;
+	foreach(var documentDbTestConfigFile in documentDbTestConfigFiles)
+	{
+		var configJson = ParseJsonFromFile(documentDbTestConfigFile);
+		configJson["Uri"] = uri;
+		configJson["AuthKey"] = authKey;
+		configJson["ConsistencyLevel"] = consistencyLevel;
 
-	SerializeJsonToFile(documentDbTestConfigFile, configJson);
+		SerializeJsonToFile(documentDbTestConfigFile, configJson);
+	}
 });
 
 Task("Run-Unit-Tests")
