@@ -82,7 +82,10 @@ return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
    .Build()
    .Initialise();
 ```
-The DatabaseOptions allow you to specify the consistency level of the database along with the default number of RUs.  
+The CollectionOptions allow you to specify
+- The consistency level of the database
+- The default number of RUs when the collection is created
+- The collection name
 
 Only use one of the following consistency levels
 - Strong
