@@ -10,10 +10,10 @@ Simple Event Store (SES) provides a lightweight event sourcing abstraction.
 
 ## Persistence Engines
 SES supports the following
-- Azure DocumentDB
+- Azure Cosmos DB
 - In Memory
 
-All persistence engines run the same test scenarios to ensure feature parity.  At present only the DocumentDB persistence engine should be considered for production usage.
+All persistence engines run the same test scenarios to ensure feature parity.  At present only the Cosmos DB persistence engine should be considered for production usage.
 
 ## Usage
 
@@ -62,20 +62,25 @@ Each subscription **must** perform an independant task.  It is not possible to r
 
 The number of events received will vary depending on the storage engine configuration.
 
-## DocumentDB
+## Cosmos DB
 ```csharp
 DocumentClient client; // Set this up as required
-var databaseName = "MyEventStore";
 
-var storageEngine = new AzureDocumentDbStorageEngine(
-	client, 
-	databaseName, 
-	new DatabaseOptions(ConsistencyLevel.BoundedStaleness, 400), 
-	new SubscriptionOptions(
-		maxItemCount: 1, 
-		pollEvery: TimeSpan.FromSeconds(0.5)));
-
-await storageEngine.Initialise();
+// If UseCollection isn't specified, sensible defaults for development are used.
+// If UseSubscriptions isn't supplied the subscription feature is disabled.
+return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
+   .UseCollection(o =>
+   {
+      o.ConsistencyLevel = consistencyLevelEnum;
+      o.CollectionRequestUnits = 400;
+   })
+   .UseSubscriptions(o =>
+   {
+      o.MaxItemCount = 1;
+      o.PollEvery = TimeSpan.FromSeconds(0.5);
+   })
+   .Build()
+   .Initialise();
 ```
 The DatabaseOptions allow you to specify the consistency level of the database along with the default number of RUs.  
 
