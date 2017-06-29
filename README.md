@@ -69,18 +69,18 @@ DocumentClient client; // Set this up as required
 // If UseCollection isn't specified, sensible defaults for development are used.
 // If UseSubscriptions isn't supplied the subscription feature is disabled.
 return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
-   .UseCollection(o =>
-   {
-      o.ConsistencyLevel = consistencyLevelEnum;
-      o.CollectionRequestUnits = 400;
-   })
-   .UseSubscriptions(o =>
-   {
-      o.MaxItemCount = 1;
-      o.PollEvery = TimeSpan.FromSeconds(0.5);
-   })
-   .Build()
-   .Initialise();
+	.UseCollection(o =>
+   	{
+		o.ConsistencyLevel = consistencyLevelEnum;
+		o.CollectionRequestUnits = 400;
+	})
+	.UseSubscriptions(o =>
+	{
+		o.MaxItemCount = 1;
+		o.PollEvery = TimeSpan.FromSeconds(0.5);
+	})
+	.Build()
+	.Initialise();
 ```
 The CollectionOptions allow you to specify
 - The consistency level of the database
