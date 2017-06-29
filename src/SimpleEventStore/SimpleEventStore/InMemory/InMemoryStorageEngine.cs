@@ -56,6 +56,11 @@ namespace SimpleEventStore.InMemory
             subscription.Start();
         }
 
+        public Task<IStorageEngine> Initialise()
+        {
+            return Task.FromResult<IStorageEngine>(this);
+        }
+
         private class Subscription
         {
             private readonly IEnumerable<StorageEvent> allStream;

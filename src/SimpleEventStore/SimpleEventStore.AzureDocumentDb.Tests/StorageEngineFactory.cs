@@ -28,10 +28,19 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
 
             DocumentClient client = new DocumentClient(new Uri(documentDbUri), authKey);
 
-            var storageEngine = new AzureDocumentDbStorageEngine(client, databaseName, new DatabaseOptions(consistencyLevelEnum, 400), new SubscriptionOptions(maxItemCount: 1, pollEvery: TimeSpan.FromSeconds(0.5)));
-            await storageEngine.Initialise();
-
-            return storageEngine;
+            return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
+                .UseCollection(o =>
+                {
+                    o.ConsistencyLevel = consistencyLevelEnum;
+                    o.CollectionRequestUnits = 400;
+                })
+                .UseSubscriptions(o =>
+                {
+                    o.MaxItemCount = 1;
+                    o.PollEvery = TimeSpan.FromSeconds(0.5);
+                })
+                .Build()
+                .Initialise();
         }
     }
 }

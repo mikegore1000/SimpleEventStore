@@ -4,14 +4,14 @@ namespace SimpleEventStore.AzureDocumentDb
 {
     public class SubscriptionOptions
     {
-        public SubscriptionOptions(int maxItemCount, TimeSpan pollEvery)
+        public SubscriptionOptions()
         {
-            this.MaxItemCount = maxItemCount;
-            this.PollEvery = pollEvery;
+            this.MaxItemCount = 100;
+            this.PollEvery = TimeSpan.FromSeconds(5);
         }
 
-        public int MaxItemCount { get; }
+        public int MaxItemCount { get; set; }
 
-        public TimeSpan PollEvery { get; }
+        public TimeSpan PollEvery { get; set; }
     }
 }
