@@ -86,12 +86,21 @@ namespace SimpleEventStore.AzureDocumentDb
 
         public void SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint)
         {
+            EnsureSubscriptionsAreEnabled();
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
             var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions);
             subscriptions.Add(subscription);
 
             subscription.Start();
+        }
+
+        private void EnsureSubscriptionsAreEnabled()
+        {
+            if (subscriptionOptions == null)
+            {
+                throw new SubscriptionsNotConfiguredException("Ensure subscription options have been supplied prior to using subscription features.");
+            }
         }
 
         private async Task CreateDatabaseIfItDoesNotExist()
