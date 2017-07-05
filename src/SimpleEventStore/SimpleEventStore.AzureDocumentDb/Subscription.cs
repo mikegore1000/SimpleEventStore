@@ -16,15 +16,17 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent;
         private readonly SubscriptionOptions subscriptionOptions;
         private readonly Dictionary<string, string> checkpoints;
+        private readonly LoggingOptions loggingOptions;
         private Task workerTask;
 
-        public Subscription(DocumentClient client, Uri commitsLink, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions)
+        public Subscription(DocumentClient client, Uri commitsLink, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions)
         {
             this.client = client;
             this.commitsLink = commitsLink;
             this.onNextEvent = onNextEvent;
             this.checkpoints = checkpoint == null ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(checkpoint);
             this.subscriptionOptions = subscriptionOptions;
+            this.loggingOptions = loggingOptions;
         }
 
         // TODO: Configure the retry policy, also allow the subscription to be canclled (use a CancellationToken)
@@ -62,6 +64,7 @@ namespace SimpleEventStore.AzureDocumentDb
                 while (query.HasMoreResults)
                 {
                     var feedResponse = await query.ExecuteNextAsync<Document>();
+                    loggingOptions.OnSuccess(ResponseInformation.FromSubscriptionReadResponse(feedResponse));
                     var events = new List<StorageEvent>();
                     string initialCheckpointValue;
 

@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
-    internal class DocumentDbStorageEvent
+    public class DocumentDbStorageEvent
     {
         [JsonProperty("id")]
         public string Id { get; set;  }

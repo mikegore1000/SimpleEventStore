@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Microsoft.Azure.Documents.Client;
 
 namespace SimpleEventStore.AzureDocumentDb
@@ -9,6 +8,7 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly string databaseName;
         private readonly DocumentClient client;
         private readonly CollectionOptions collectionOptions = new CollectionOptions();
+        private readonly LoggingOptions loggingOptions = new LoggingOptions();
         private SubscriptionOptions subscriptionOptions;
 
         public AzureDocumentDbStorageEngineBuilder(DocumentClient client, string databaseName)
@@ -37,9 +37,17 @@ namespace SimpleEventStore.AzureDocumentDb
             return this;
         }
 
+        public AzureDocumentDbStorageEngineBuilder UseLogging(Action<LoggingOptions> action)
+        {
+            Guard.IsNotNull(nameof(action), action);
+
+            action(loggingOptions);
+            return this;
+        }
+
         public IStorageEngine Build()
         {
-            var engine = new AzureDocumentDbStorageEngine(this.client, databaseName, collectionOptions, subscriptionOptions);
+            var engine = new AzureDocumentDbStorageEngine(this.client, this.databaseName, this.collectionOptions, this.subscriptionOptions, this.loggingOptions);
             return engine;
         }
     }

@@ -68,6 +68,7 @@ DocumentClient client; // Set this up as required
 
 // If UseCollection isn't specified, sensible defaults for development are used.
 // If UseSubscriptions isn't supplied the subscription feature is disabled.
+// The UseLogging sets up callbacks per Cosmos DB operation performed.
 return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
 	.UseCollection(o =>
    	{
@@ -79,6 +80,10 @@ return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
 		o.MaxItemCount = 1;
 		o.PollEvery = TimeSpan.FromSeconds(0.5);
 	})
+	.UseLogging(o =>
+    {
+        o.Success = onSuccessCallback;
+    })
 	.Build()
 	.Initialise();
 ```

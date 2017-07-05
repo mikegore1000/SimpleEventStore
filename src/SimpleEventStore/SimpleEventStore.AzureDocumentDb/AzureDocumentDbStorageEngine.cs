@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -20,8 +21,9 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly Uri storedProcLink;
         private readonly List<Subscription> subscriptions = new List<Subscription>();
         private readonly SubscriptionOptions subscriptionOptions;
+        private readonly LoggingOptions loggingOptions;
 
-        internal AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, CollectionOptions collectionOptions, SubscriptionOptions subscriptionOptions)
+        internal AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, CollectionOptions collectionOptions, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions)
         {
             this.client = client;
             this.databaseName = databaseName;
@@ -29,6 +31,7 @@ namespace SimpleEventStore.AzureDocumentDb
             this.commitsLink = UriFactory.CreateDocumentCollectionUri(databaseName, collectionOptions.CollectionName);
             this.storedProcLink = UriFactory.CreateStoredProcedureUri(databaseName, collectionOptions.CollectionName, AppendStoredProcedureName);
             this.subscriptionOptions = subscriptionOptions;
+            this.loggingOptions = loggingOptions;
         }
 
         public async Task<IStorageEngine> Initialise()
@@ -50,6 +53,8 @@ namespace SimpleEventStore.AzureDocumentDb
                     storedProcLink, 
                     new RequestOptions { PartitionKey = new PartitionKey(streamId), ConsistencyLevel = this.collectionOptions.ConsistencyLevel },
                     docs);
+
+                loggingOptions.OnSuccess(ResponseInformation.FromWriteResponse(result));
             }
             catch (DocumentClientException ex)
             {
@@ -75,7 +80,10 @@ namespace SimpleEventStore.AzureDocumentDb
 
             while (eventsQuery.HasMoreResults)
             {
-                foreach (var e in await eventsQuery.ExecuteNextAsync<DocumentDbStorageEvent>())
+                var response = await eventsQuery.ExecuteNextAsync<DocumentDbStorageEvent>();
+                loggingOptions.OnSuccess(ResponseInformation.FromReadResponse(response));
+
+                foreach (var e in response)
                 {
                     events.Add(e.ToStorageEvent());
                 }
@@ -89,7 +97,7 @@ namespace SimpleEventStore.AzureDocumentDb
             EnsureSubscriptionsAreEnabled();
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions);
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions, this.loggingOptions);
             subscriptions.Add(subscription);
 
             subscription.Start();

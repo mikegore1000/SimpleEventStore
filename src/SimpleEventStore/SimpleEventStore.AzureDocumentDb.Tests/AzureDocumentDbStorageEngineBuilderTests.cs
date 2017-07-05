@@ -32,6 +32,13 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             Assert.Throws<ArgumentNullException>(() => builder.UseCollection(null));
         }
 
+        [Fact]
+        public void when_setting_logging_settings_a_callback_must_be_supplied()
+        {
+            var builder = new AzureDocumentDbStorageEngineBuilder(CreateClient(), "Test");
+            Assert.Throws<ArgumentNullException>(() => builder.UseLogging(null));
+        }
+
         private static DocumentClient CreateClient()
         {
             var client = new DocumentClient(new Uri("https://localhost:8081/"), "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
