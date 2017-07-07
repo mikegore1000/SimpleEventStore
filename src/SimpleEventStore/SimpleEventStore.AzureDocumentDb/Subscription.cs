@@ -17,9 +17,10 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly SubscriptionOptions subscriptionOptions;
         private readonly Dictionary<string, string> checkpoints;
         private readonly LoggingOptions loggingOptions;
+        private readonly ISerializationTypeMap serializationTypeMap;
         private Task workerTask;
 
-        public Subscription(DocumentClient client, Uri commitsLink, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions)
+        public Subscription(DocumentClient client, Uri commitsLink, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions, ISerializationTypeMap serializationTypeMap)
         {
             this.client = client;
             this.commitsLink = commitsLink;
@@ -27,6 +28,7 @@ namespace SimpleEventStore.AzureDocumentDb
             this.checkpoints = checkpoint == null ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(checkpoint);
             this.subscriptionOptions = subscriptionOptions;
             this.loggingOptions = loggingOptions;
+            this.serializationTypeMap = serializationTypeMap;
         }
 
         // TODO: Configure the retry policy, also allow the subscription to be canclled (use a CancellationToken)
@@ -70,7 +72,7 @@ namespace SimpleEventStore.AzureDocumentDb
 
                     foreach (var @event in feedResponse)
                     {
-                        events.Add(DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent());
+                        events.Add(DocumentDbStorageEvent.FromDocument(@event).ToStorageEvent(this.serializationTypeMap));
                     }
 
                     checkpoints.TryGetValue(pkRange.Id, out initialCheckpointValue);

@@ -68,7 +68,6 @@ DocumentClient client; // Set this up as required
 
 // If UseCollection isn't specified, sensible defaults for development are used.
 // If UseSubscriptions isn't supplied the subscription feature is disabled.
-// The UseLogging sets up callbacks per Cosmos DB operation performed.
 return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
 	.UseCollection(o =>
    	{
@@ -81,13 +80,19 @@ return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
 		o.PollEvery = TimeSpan.FromSeconds(0.5);
 	})
 	.UseLogging(o =>
-    {
-        o.Success = onSuccessCallback;
-    })
+	{
+		o.Success = onSuccessCallback;
+	})
+	.UseTypeMap(new ConfigurableSerializationTypeMap()
+		.RegisterTypes(
+			typeof(OrderCreated).GetTypeInfo().Assembly,
+			t => t.Namespace.EndsWith("Events"),
+			t => t.Name))
 	.Build()
 	.Initialise();
 ```
-The CollectionOptions allow you to specify
+### CollectionOptions
+Allows you to specify
 - The consistency level of the database
 - The default number of RUs when the collection is created
 - The collection name
@@ -96,8 +101,20 @@ Only use one of the following consistency levels
 - Strong
 - Bounded Staleness - use this if you need to geo-replicate the database
 
-The SubscriptionOptions allow you to configure how catch up subscriptions work
+### UseSubscriptions
+Allows you to configure the following aspects for catch up subscriptions
 - Max Item Count - the number of events to pull back in a polling operation
 - Poll Every - how long to wait after a polling operation has completed
 
-Calling the Initialise operation creates the underlying collection based on the DatabaseOptions.  This ensures the required stored procedure is present too.  It is safe to call this multiple times.
+### UseLogging
+Sets up callbacks per Cosmos DB operation performed.  This is useful if you want to record per call data e.g. RU cost of each operation.
+
+### UseTypeMap
+Allows you to control the event body/metadata type names.  Bult in implementations
+- DefaultSerializationTypeMap - uses the AssemblyQualifiedName of the type. (default)
+- ConfigurableSerializationTypeMap - provides full control.
+
+While the default implementation is simple, this isn't great for versioning as contract assembly version number changes will render events unreadable.  Therefore the configurable implementation or your own implementation is recommended.
+
+### Initialise
+Calling the operation creates the underlying collection based on the DatabaseOptions.  This ensures the required stored procedure is present too.  It is safe to call this multiple times.

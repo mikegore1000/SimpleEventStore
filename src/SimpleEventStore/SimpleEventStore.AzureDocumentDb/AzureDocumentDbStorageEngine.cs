@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -22,8 +21,9 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly List<Subscription> subscriptions = new List<Subscription>();
         private readonly SubscriptionOptions subscriptionOptions;
         private readonly LoggingOptions loggingOptions;
+        private readonly ISerializationTypeMap typeMap;
 
-        internal AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, CollectionOptions collectionOptions, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions)
+        internal AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, CollectionOptions collectionOptions, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions, ISerializationTypeMap typeMap)
         {
             this.client = client;
             this.databaseName = databaseName;
@@ -32,6 +32,7 @@ namespace SimpleEventStore.AzureDocumentDb
             this.storedProcLink = UriFactory.CreateStoredProcedureUri(databaseName, collectionOptions.CollectionName, AppendStoredProcedureName);
             this.subscriptionOptions = subscriptionOptions;
             this.loggingOptions = loggingOptions;
+            this.typeMap = typeMap;
         }
 
         public async Task<IStorageEngine> Initialise()
@@ -45,7 +46,7 @@ namespace SimpleEventStore.AzureDocumentDb
 
         public async Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
-            var docs = events.Select(d => DocumentDbStorageEvent.FromStorageEvent(d)).ToList();
+            var docs = events.Select(d => DocumentDbStorageEvent.FromStorageEvent(d, this.typeMap)).ToList();
 
             try
             {
@@ -85,7 +86,7 @@ namespace SimpleEventStore.AzureDocumentDb
 
                 foreach (var e in response)
                 {
-                    events.Add(e.ToStorageEvent());
+                    events.Add(e.ToStorageEvent(this.typeMap));
                 }
             }
 
@@ -97,7 +98,7 @@ namespace SimpleEventStore.AzureDocumentDb
             EnsureSubscriptionsAreEnabled();
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions, this.loggingOptions);
+            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, checkpoint, this.subscriptionOptions, this.loggingOptions, this.typeMap);
             subscriptions.Add(subscription);
 
             subscription.Start();

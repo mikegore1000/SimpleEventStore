@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.Configuration;
+using SimpleEventStore.Tests.Events;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
@@ -39,6 +41,11 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                     o.MaxItemCount = 1;
                     o.PollEvery = TimeSpan.FromSeconds(0.5);
                 })
+                .UseTypeMap(new ConfigurableSerializationTypeMap()
+                    .RegisterTypes(
+                        typeof(OrderCreated).GetTypeInfo().Assembly,
+                        t => t.Namespace.EndsWith("Events"),
+                        t => t.Name))
                 .Build()
                 .Initialise();
         }

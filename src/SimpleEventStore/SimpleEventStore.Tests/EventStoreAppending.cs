@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using SimpleEventStore.Tests.Events;
-using SimpleEventStore.Tests.Metadata;
 using Xunit;
 
 namespace SimpleEventStore.Tests
