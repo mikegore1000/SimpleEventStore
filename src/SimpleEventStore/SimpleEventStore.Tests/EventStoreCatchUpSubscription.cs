@@ -11,7 +11,7 @@ namespace SimpleEventStore.Tests
         private const int NumberOfStreamsToCreate = 10;
 
         [Fact]
-        public async void when_a_subscription_is_started_with_no_checkpoint_token_all_stored_events_are_read_in_stream_order()
+        public async Task when_a_subscription_is_started_with_no_checkpoint_token_all_stored_events_are_read_in_stream_order()
         {
             var sut = await GetEventStore();
             var streams = new Dictionary<string, Queue<EventData>>();
@@ -50,7 +50,7 @@ namespace SimpleEventStore.Tests
         }
 
         [Fact]
-        public async void when_a_subscription_is_started_with_no_checkpoint_token_new_events_written_are_read_in_stream_order()
+        public async Task when_a_subscription_is_started_with_no_checkpoint_token_new_events_written_are_read_in_stream_order()
         {
             var sut = await GetEventStore();
             var streams = new Dictionary<string, Queue<EventData>>();
