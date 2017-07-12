@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore.InMemory
@@ -47,13 +48,15 @@ namespace SimpleEventStore.InMemory
             return Task.FromResult(result);
         }
 
-        public void SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint)
+        public ISubscription SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped, string checkpoint)
         {
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
-            var subscription = new Subscription(this.allEvents, onNextEvent, checkpoint);
+            var subscription = new Subscription(this.allEvents, onNextEvent, onStopped, checkpoint);
             this.subscriptions.Add(subscription);
+
             subscription.Start();
+            return subscription;
         }
 
         public Task<IStorageEngine> Initialise()
@@ -61,31 +64,50 @@ namespace SimpleEventStore.InMemory
             return Task.FromResult<IStorageEngine>(this);
         }
 
-        private class Subscription
+        public class Subscription : ISubscription
         {
             private readonly IEnumerable<StorageEvent> allStream;
-            private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent;
-            private string initialCheckpoint;
+            private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent;
+            private readonly Action<ISubscription, Exception> onStopped;
+            private readonly string initialCheckpoint;
             private int currentPosition;
             private Task workerTask;
+            private CancellationTokenSource cancellationSource;
 
-            public Subscription(IEnumerable<StorageEvent> allStream, Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent, string checkpoint)
+            public Subscription(IEnumerable<StorageEvent> allStream, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped, string checkpoint)
             {
                 this.allStream = allStream;
-                this.onNewEvent = onNewEvent;
+                this.onNextEvent = onNextEvent;
+                this.onStopped = onStopped;
                 this.initialCheckpoint = checkpoint;
             }
 
             public void Start()
             {
+                cancellationSource = new CancellationTokenSource();
+
                 workerTask = Task.Run(async () =>
                 {
-                    while (true)
+                    try
                     {
-                        ReadEvents();
-                        await Task.Delay(500);
+                        while (!cancellationSource.Token.IsCancellationRequested)
+                        {
+                            ReadEvents();
+                            await Task.Delay(500);
+                        }
                     }
-                });
+                    catch (Exception e)
+                    {
+                        this.onStopped?.Invoke(this, e);
+                    }
+
+                    this.onStopped?.Invoke(this, null);
+                }, cancellationSource.Token);
+            }
+
+            public void Stop()
+            {
+                this.cancellationSource.Cancel();
             }
 
             private void ReadEvents()
@@ -103,7 +125,7 @@ namespace SimpleEventStore.InMemory
 
                     if(dispatchEvents)
                     {
-                        this.onNewEvent(new[] { @event }, @event.EventId.ToString());
+                        this.onNextEvent(new[] { @event }, @event.EventId.ToString());
                         this.currentPosition++;
                     }
                 }

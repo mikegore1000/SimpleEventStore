@@ -173,6 +173,7 @@ namespace SimpleEventStore.Tests
                         }
                     }
                 },
+                null,
                 checkpoint);
 
             await resumedEventRead.Task;
@@ -180,6 +181,37 @@ namespace SimpleEventStore.Tests
             Assert.NotNull(resumedEventRead.Task.Result);
             Assert.IsType<OrderDispatched>(resumedEventRead.Task.Result.EventBody);
         }
+
+        [Fact]
+        public async Task when_a_subscription_is_started_it_can_be_stopped_and_no_more_events_are_processed()
+        {
+            var eventStore = await GetEventStore();
+            var callbackCompletionSource = new TaskCompletionSource<Exception>();
+
+            var subscription = eventStore.SubscribeToAll((events, c) => {  }, (sub, exception) => callbackCompletionSource.SetResult(exception));
+            subscription.Stop();
+
+            callbackCompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
+            Assert.Null(callbackCompletionSource.Task.Result);
+        }
+
+        [Fact]
+        public async Task when_a_subscription_throws_an_exception_it_is_stopped_and_the_exception_is_supplied()
+        {
+            var streamId = Guid.NewGuid().ToString();
+            var eventStore = await GetEventStore();
+            var callbackCompletionSource = new TaskCompletionSource<Exception>();
+            await eventStore.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
+
+            eventStore.SubscribeToAll((events, c) => throw new Exception("TEST"), (sub, exception) => callbackCompletionSource.SetResult(exception));
+
+            callbackCompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
+            Assert.NotNull(callbackCompletionSource.Task.Result);
+        }
+
+        // TODO: Add test to prove a subscription can be restarted...
+        // TODO: Add test to prove starting a running subscription has no side effects...
+        // TODO: Add test to prove stopping a stopped subscription has no side effects...
 
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
