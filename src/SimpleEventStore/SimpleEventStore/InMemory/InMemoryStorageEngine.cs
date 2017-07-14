@@ -73,6 +73,7 @@ namespace SimpleEventStore.InMemory
             private int currentPosition;
             private Task workerTask;
             private CancellationTokenSource cancellationSource;
+            private bool running = false;
 
             public Subscription(IEnumerable<StorageEvent> allStream, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped, string checkpoint)
             {
@@ -84,8 +85,12 @@ namespace SimpleEventStore.InMemory
 
             public void Start()
             {
-                cancellationSource = new CancellationTokenSource();
+                if (running)
+                {
+                    return;
+                }
 
+                cancellationSource = new CancellationTokenSource();
                 workerTask = Task.Run(async () =>
                 {
                     try
@@ -103,11 +108,16 @@ namespace SimpleEventStore.InMemory
 
                     this.onStopped?.Invoke(this, null);
                 }, cancellationSource.Token);
+                running = true;
             }
 
             public void Stop()
             {
-                this.cancellationSource.Cancel();
+                if (running)
+                {
+                    this.cancellationSource.Cancel();
+                    running = false;
+                }
             }
 
             private void ReadEvents()

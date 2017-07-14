@@ -9,6 +9,7 @@ namespace SimpleEventStore.Tests
     public abstract class EventStoreCatchUpSubscription : EventStoreTestBase
     {
         private const int NumberOfStreamsToCreate = 10;
+        private static TimeSpan TestMaxTimeout = TimeSpan.FromSeconds(30);
 
         [Fact]
         public async Task when_a_subscription_is_started_with_no_checkpoint_token_all_stored_events_are_read_in_stream_order()
@@ -44,8 +45,7 @@ namespace SimpleEventStore.Tests
                     }
                 });
 
-            await completionSource.Task;
-
+            Assert.True(completionSource.Task.Wait(TestMaxTimeout));
             Assert.Equal(0, streams.Count);
         }
 
@@ -82,8 +82,8 @@ namespace SimpleEventStore.Tests
                 });
 
             await CreateStreams(streams, sut);
-            await completionSource.Task;
 
+            Assert.True(completionSource.Task.Wait(TestMaxTimeout));
             Assert.Equal(0, streams.Count);
         }
 
@@ -121,9 +121,7 @@ namespace SimpleEventStore.Tests
             var streamId = Guid.NewGuid().ToString();
             await sut.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
 
-            Task.WaitAll(subscription1Called.Task, subscription2Called.Task);
-            Assert.True(subscription1Called.Task.Result);
-            Assert.True(subscription2Called.Task.Result);
+            Assert.True(Task.WaitAll(new [] { subscription1Called.Task, subscription2Called.Task }, TestMaxTimeout));
         }
 
         [Fact]
@@ -176,8 +174,7 @@ namespace SimpleEventStore.Tests
                 null,
                 checkpoint);
 
-            await resumedEventRead.Task;
-
+            Assert.True(resumedEventRead.Task.Wait(TestMaxTimeout));
             Assert.NotNull(resumedEventRead.Task.Result);
             Assert.IsType<OrderDispatched>(resumedEventRead.Task.Result.EventBody);
         }
@@ -191,7 +188,7 @@ namespace SimpleEventStore.Tests
             var subscription = eventStore.SubscribeToAll((events, c) => {  }, (sub, exception) => callbackCompletionSource.SetResult(exception));
             subscription.Stop();
 
-            callbackCompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
+            Assert.True(callbackCompletionSource.Task.Wait(TestMaxTimeout));
             Assert.Null(callbackCompletionSource.Task.Result);
         }
 
@@ -203,15 +200,62 @@ namespace SimpleEventStore.Tests
             var callbackCompletionSource = new TaskCompletionSource<Exception>();
             await eventStore.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
 
-            eventStore.SubscribeToAll((events, c) => throw new Exception("TEST"), (sub, exception) => callbackCompletionSource.SetResult(exception));
+            eventStore.SubscribeToAll(
+                (events, c) => {
+                    throw new Exception("TEST");
+                },
+                (sub, exception) =>
+                {
+                    callbackCompletionSource.SetResult(exception);
+                });
 
-            callbackCompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
+            Assert.True(callbackCompletionSource.Task.Wait(TestMaxTimeout));
             Assert.NotNull(callbackCompletionSource.Task.Result);
         }
 
-        // TODO: Add test to prove a subscription can be restarted...
-        // TODO: Add test to prove starting a running subscription has no side effects...
-        // TODO: Add test to prove stopping a stopped subscription has no side effects...
+        [Fact]
+        public async Task when_a_subscription_stops_it_can_be_restarted()
+        {
+            var eventStore = await GetEventStore();
+            var ignoreEvents = true;
+            var processedEvents = new TaskCompletionSource<bool>();
+
+            var subscription = eventStore.SubscribeToAll(
+                (events, c) =>
+                {
+                    if (!ignoreEvents)
+                    {
+                        processedEvents.SetResult(true);
+                    }
+                });
+
+            subscription.Stop();
+            ignoreEvents = false;
+            subscription.Start();
+
+            var streamId = Guid.NewGuid().ToString();
+            await eventStore.AppendToStream(streamId, 0, new EventData(Guid.NewGuid(), new OrderCreated(streamId)));
+
+            Assert.True(processedEvents.Task.Wait(TestMaxTimeout));
+        }
+
+        [Fact]
+        public async Task when_a_subscription_is_stopped_another_stop_does_not_throw_an_exception()
+        {
+            var eventStore = await GetEventStore();
+            var subscription = eventStore.SubscribeToAll((e, c) => { });
+            subscription.Stop();
+            subscription.Stop();
+        }
+
+        [Fact]
+        public async Task when_a_subscription_is_started_another_start_does_not_throw_an_exception()
+        {
+            var eventStore = await GetEventStore();
+            var subscription = eventStore.SubscribeToAll((e, c) => { });
+            subscription.Start();
+            subscription.Start();
+        }
 
         private static async Task CreateStreams(Dictionary<string, Queue<EventData>> streams, EventStore sut)
         {
