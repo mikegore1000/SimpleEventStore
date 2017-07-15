@@ -18,7 +18,6 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly CollectionOptions collectionOptions;
         private readonly Uri commitsLink;
         private readonly Uri storedProcLink;
-        private readonly List<Subscription> subscriptions = new List<Subscription>();
         private readonly SubscriptionOptions subscriptionOptions;
         private readonly LoggingOptions loggingOptions;
         private readonly ISerializationTypeMap typeMap;
@@ -99,8 +98,6 @@ namespace SimpleEventStore.AzureDocumentDb
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
             var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, onStopped, checkpoint, this.subscriptionOptions, this.loggingOptions, this.typeMap);
-            subscriptions.Add(subscription);
-
             subscription.Start();
             return subscription;
         }

@@ -9,7 +9,8 @@ namespace SimpleEventStore.Tests
     public abstract class EventStoreCatchUpSubscription : EventStoreTestBase
     {
         private const int NumberOfStreamsToCreate = 10;
-        private static TimeSpan TestMaxTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan TestMaxTimeout = TimeSpan.FromSeconds(10);
+
 
         [Fact]
         public async Task when_a_subscription_is_started_with_no_checkpoint_token_all_stored_events_are_read_in_stream_order()
@@ -182,14 +183,13 @@ namespace SimpleEventStore.Tests
         [Fact]
         public async Task when_a_subscription_is_started_it_can_be_stopped_and_no_more_events_are_processed()
         {
-            var eventStore = await GetEventStore();
             var callbackCompletionSource = new TaskCompletionSource<Exception>();
-
-            var subscription = eventStore.SubscribeToAll((events, c) => {  }, (sub, exception) => callbackCompletionSource.SetResult(exception));
+            var eventStore = await GetEventStore();
+            
+            var subscription = eventStore.SubscribeToAll((events, c) => { }, (sub, exception) => callbackCompletionSource.SetResult(exception));
             subscription.Stop();
 
             Assert.True(callbackCompletionSource.Task.Wait(TestMaxTimeout));
-            Assert.Null(callbackCompletionSource.Task.Result);
         }
 
         [Fact]

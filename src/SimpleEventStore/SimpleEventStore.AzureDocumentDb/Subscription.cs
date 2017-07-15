@@ -60,7 +60,7 @@ namespace SimpleEventStore.AzureDocumentDb
                 }
 
                 this.onStopped?.Invoke(this, null);
-            }, cancellationSource.Token);
+            });
             running = true;
         }
 

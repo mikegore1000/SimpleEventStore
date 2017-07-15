@@ -11,7 +11,6 @@ namespace SimpleEventStore.InMemory
     {
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
         private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
-        private readonly List<Subscription> subscriptions = new List<Subscription>();
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -53,7 +52,6 @@ namespace SimpleEventStore.InMemory
             Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
 
             var subscription = new Subscription(this.allEvents, onNextEvent, onStopped, checkpoint);
-            this.subscriptions.Add(subscription);
 
             subscription.Start();
             return subscription;
@@ -107,7 +105,7 @@ namespace SimpleEventStore.InMemory
                     }
 
                     this.onStopped?.Invoke(this, null);
-                }, cancellationSource.Token);
+                });
                 running = true;
             }
 
