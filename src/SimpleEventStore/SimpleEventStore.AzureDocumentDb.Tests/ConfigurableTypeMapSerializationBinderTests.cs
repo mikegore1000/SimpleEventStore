@@ -55,7 +55,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
         public void when_registering_multiple_types_then_the_type_can_be_found()
         {
             var sut = new ConfigurableSerializationTypeMap();
-            sut.RegisterTypes(typeof(OrderCreated).GetTypeInfo().Assembly, t => t.Namespace.EndsWith("Events"), t => t.Name);
+            sut.RegisterTypes(typeof(OrderCreated).GetTypeInfo().Assembly, t => t.Namespace != null && t.Namespace.EndsWith("Events"), t => t.Name);
 
             Assert.Equal(typeof(OrderCreated), sut.GetTypeFromName("OrderCreated"));
         }

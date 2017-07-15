@@ -44,7 +44,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                 .UseTypeMap(new ConfigurableSerializationTypeMap()
                     .RegisterTypes(
                         typeof(OrderCreated).GetTypeInfo().Assembly,
-                        t => t.Namespace.EndsWith("Events"),
+                        t => t.Namespace != null && t.Namespace.EndsWith("Events"),
                         t => t.Name))
                 .Build()
                 .Initialise();

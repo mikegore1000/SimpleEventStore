@@ -26,7 +26,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             };
             var typeMap = new ConfigurableSerializationTypeMap().RegisterTypes(
                 typeof(OrderCreated).GetTypeInfo().Assembly,
-                t => t.Namespace.EndsWith("Events"),
+                t => t.Namespace != null && t.Namespace.EndsWith("Events"),
                 t => t.Name);
             var result = sut.ToStorageEvent(typeMap);
 
