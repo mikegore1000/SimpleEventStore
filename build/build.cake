@@ -21,7 +21,7 @@ var solutionDir = "../src/SimpleEventStore/";
 var solutionFile = solutionDir + "SimpleEventStore.sln";
 var documentDbTestConfigFiles = new [] {
 	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json"),
-	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/net461/appsettings.json")
+	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/net452/appsettings.json")
 };
 var testDirs = GetDirectories(solutionDir + "*.Tests");
 var outputDir = "./nuget";
