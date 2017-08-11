@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.1;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="appsettings.json">
@@ -10,8 +10,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.3.2" Condition="'$(TargetFramework)' == 'netstandard1.6'" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.14.1" Condition="'$(TargetFramework)' == 'net461'" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0.0" Condition="'$(TargetFramework)' == 'net461'" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.14.1" Condition="'$(TargetFramework)' == 'net452'" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0.0" Condition="'$(TargetFramework)' == 'net452'" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
     <PackageReference Include="xunit" Version="2.3.0-beta2-build3683" />
