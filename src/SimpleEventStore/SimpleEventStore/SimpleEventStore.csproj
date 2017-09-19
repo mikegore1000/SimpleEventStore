@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Title>SimpleEventStore</Title>
+    <Title>ASOS.SimpleEventStore</Title>
     <Description>Simple Event Store (SES) provides a lightweight event sourcing abstraction.</Description>
     <Company>ASOS</Company>
     <Copyright>Copyright ASOS ©2016</Copyright>

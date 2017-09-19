@@ -14,7 +14,7 @@
     <EmbeddedResource Include="Resources\AppendToStream.js" />
   </ItemGroup>
   <PropertyGroup>
-    <Title>SimpleEventStore.AzureDocumentDb</Title>
+    <Title>Asos.SimpleEventStore.AzureDocumentDb</Title>
     <Description>Provides a DocumentDB storage engine for Simple Event Store (SES)</Description>
     <Company>ASOS</Company>
     <Copyright>Copyright ASOS ©2016</Copyright>
