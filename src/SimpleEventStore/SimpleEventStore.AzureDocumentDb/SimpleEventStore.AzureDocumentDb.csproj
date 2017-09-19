@@ -20,7 +20,7 @@
     <Copyright>Copyright ASOS ©2016</Copyright>
     <Product>SimpleEventStore.AzureDocumentDb</Product>
     <PackageId>Asos.SimpleEventStore.AzureDocumentDb</PackageId>
-    <Authors></Authors>
+    <Authors>ASOS</Authors>
     <PackageTags>eventsourcing documentdb azure</PackageTags>
     <PackageProjectUrl>https://github.com/ASOS/SimpleEventStore</PackageProjectUrl>
     <ApplicationIcon />
