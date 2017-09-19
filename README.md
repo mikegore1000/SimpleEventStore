@@ -6,7 +6,6 @@ Simple Event Store (SES) provides a lightweight event sourcing abstraction.
 - Full support for async/await for all persistence engines
 - Optimistic concurrency for append operations
 - Reading streams forward
-- Catch up subscriptions
 
 ## Persistence Engines
 SES supports the following
@@ -73,11 +72,6 @@ Allows you to specify
 Only use one of the following consistency levels
 - Strong
 - Bounded Staleness - use this if you need to geo-replicate the database
-
-### UseSubscriptions
-Allows you to configure the following aspects for catch up subscriptions
-- Max Item Count - the number of events to pull back in a polling operation
-- Poll Every - how long to wait after a polling operation has completed
 
 ### UseLogging
 Sets up callbacks per Cosmos DB operation performed.  This is useful if you want to record per call data e.g. RU cost of each operation.
