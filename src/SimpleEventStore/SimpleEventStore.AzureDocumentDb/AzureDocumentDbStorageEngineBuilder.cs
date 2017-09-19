@@ -9,7 +9,6 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly DocumentClient client;
         private readonly CollectionOptions collectionOptions = new CollectionOptions();
         private readonly LoggingOptions loggingOptions = new LoggingOptions();
-        private SubscriptionOptions subscriptionOptions;
         private ISerializationTypeMap typeMap = new DefaultSerializationTypeMap();
 
         public AzureDocumentDbStorageEngineBuilder(DocumentClient client, string databaseName)
@@ -26,15 +25,6 @@ namespace SimpleEventStore.AzureDocumentDb
             Guard.IsNotNull(nameof(action), action);
 
             action(collectionOptions);
-            return this;
-        }
-
-        public AzureDocumentDbStorageEngineBuilder UseSubscriptions(Action<SubscriptionOptions> action)
-        {
-            Guard.IsNotNull(nameof(action), action);
-
-            subscriptionOptions = new SubscriptionOptions();
-            action(subscriptionOptions);
             return this;
         }
 
@@ -56,7 +46,7 @@ namespace SimpleEventStore.AzureDocumentDb
 
         public IStorageEngine Build()
         {
-            var engine = new AzureDocumentDbStorageEngine(this.client, this.databaseName, this.collectionOptions, this.subscriptionOptions, this.loggingOptions, this.typeMap);
+            var engine = new AzureDocumentDbStorageEngine(this.client, this.databaseName, this.collectionOptions, this.loggingOptions, this.typeMap);
             return engine;
         }
     }

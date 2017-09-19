@@ -47,97 +47,9 @@ namespace SimpleEventStore.InMemory
             return Task.FromResult(result);
         }
 
-        public ISubscription SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped, string checkpoint)
-        {
-            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
-
-            var subscription = new Subscription(this.allEvents, onNextEvent, onStopped, checkpoint);
-
-            subscription.Start();
-            return subscription;
-        }
-
         public Task<IStorageEngine> Initialise()
         {
             return Task.FromResult<IStorageEngine>(this);
-        }
-
-        public class Subscription : ISubscription
-        {
-            private readonly IEnumerable<StorageEvent> allStream;
-            private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent;
-            private readonly Action<ISubscription, Exception> onStopped;
-            private readonly string initialCheckpoint;
-            private int currentPosition;
-            private Task workerTask;
-            private CancellationTokenSource cancellationSource;
-            private bool running = false;
-
-            public Subscription(IEnumerable<StorageEvent> allStream, Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped, string checkpoint)
-            {
-                this.allStream = allStream;
-                this.onNextEvent = onNextEvent;
-                this.onStopped = onStopped;
-                this.initialCheckpoint = checkpoint;
-            }
-
-            public void Start()
-            {
-                if (running)
-                {
-                    return;
-                }
-
-                cancellationSource = new CancellationTokenSource();
-                workerTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        while (!cancellationSource.Token.IsCancellationRequested)
-                        {
-                            ReadEvents();
-                            await Task.Delay(500);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        this.onStopped?.Invoke(this, e);
-                    }
-
-                    this.onStopped?.Invoke(this, null);
-                });
-                running = true;
-            }
-
-            public void Stop()
-            {
-                if (running)
-                {
-                    this.cancellationSource.Cancel();
-                    running = false;
-                }
-            }
-
-            private void ReadEvents()
-            {
-                var snapshot = allStream.Skip(this.currentPosition).ToList();
-
-                foreach (var @event in snapshot)
-                {
-                    bool dispatchEvents = true;
-
-                    if (this.initialCheckpoint == null || this.initialCheckpoint == @event.EventId.ToString())
-                    {
-                        dispatchEvents = this.initialCheckpoint == null;
-                    }
-
-                    if(dispatchEvents)
-                    {
-                        this.onNextEvent(new[] { @event }, @event.EventId.ToString());
-                        this.currentPosition++;
-                    }
-                }
-            }
         }
     }
 }

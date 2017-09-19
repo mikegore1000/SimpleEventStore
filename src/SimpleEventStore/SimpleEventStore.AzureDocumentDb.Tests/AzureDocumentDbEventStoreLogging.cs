@@ -51,29 +51,6 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
             Assert.Equal(2, logCount);
         }
 
-        [Fact]
-        public async void when_a_subscription_reads_events_the_log_callback_is_called()
-        {
-            var polledOneEvent = 0;
-            var logCount = 0;
-            var sut = new EventStore(await CreateStorageEngine(t => Interlocked.Increment(ref logCount)));
-            var completionSource = new TaskCompletionSource<object>();
-
-            sut.SubscribeToAll(
-                (events, checkpoint) =>
-                {
-                    if (Interlocked.Exchange(ref polledOneEvent, 1) == 0)
-                    {
-                        completionSource.SetResult(null);
-                    }
-                });
-
-            await sut.AppendToStream(Guid.NewGuid().ToString(), 0, new EventData(Guid.NewGuid(), new OrderCreated("TEST-ORDER")));
-            await completionSource.Task;
-
-            Assert.True(logCount > 1);
-        }
-
         private static async Task<IStorageEngine> CreateStorageEngine(Action<ResponseInformation> onSuccessCallback, string databaseName = "LoggingTests")
         {
             var config = new ConfigurationBuilder()
@@ -98,11 +75,6 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                 {
                     o.ConsistencyLevel = consistencyLevelEnum;
                     o.CollectionRequestUnits = 400;
-                })
-                .UseSubscriptions(o =>
-                {
-                    o.MaxItemCount = 1;
-                    o.PollEvery = TimeSpan.FromSeconds(0.5);
                 })
                 .UseLogging(o =>
                 {

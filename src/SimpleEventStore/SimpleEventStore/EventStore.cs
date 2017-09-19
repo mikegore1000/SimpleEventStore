@@ -41,10 +41,5 @@ namespace SimpleEventStore
 
             return engine.ReadStreamForwards(streamId, startPosition, numberOfEventsToRead);
         }
-
-        public ISubscription SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped = null, string checkpoint = null)
-        {
-            return engine.SubscribeToAll(onNextEvent, onStopped, checkpoint);
-        }
     }
 }

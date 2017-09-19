@@ -36,11 +36,6 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                     o.ConsistencyLevel = consistencyLevelEnum;
                     o.CollectionRequestUnits = 400;
                 })
-                .UseSubscriptions(o =>
-                {
-                    o.MaxItemCount = 1;
-                    o.PollEvery = TimeSpan.FromSeconds(0.5);
-                })
                 .UseTypeMap(new ConfigurableSerializationTypeMap()
                     .RegisterTypes(
                         typeof(OrderCreated).GetTypeInfo().Assembly,

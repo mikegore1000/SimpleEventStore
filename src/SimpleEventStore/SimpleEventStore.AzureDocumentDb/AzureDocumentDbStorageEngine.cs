@@ -18,18 +18,16 @@ namespace SimpleEventStore.AzureDocumentDb
         private readonly CollectionOptions collectionOptions;
         private readonly Uri commitsLink;
         private readonly Uri storedProcLink;
-        private readonly SubscriptionOptions subscriptionOptions;
         private readonly LoggingOptions loggingOptions;
         private readonly ISerializationTypeMap typeMap;
 
-        internal AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, CollectionOptions collectionOptions, SubscriptionOptions subscriptionOptions, LoggingOptions loggingOptions, ISerializationTypeMap typeMap)
+        internal AzureDocumentDbStorageEngine(DocumentClient client, string databaseName, CollectionOptions collectionOptions, LoggingOptions loggingOptions, ISerializationTypeMap typeMap)
         {
             this.client = client;
             this.databaseName = databaseName;
             this.collectionOptions = collectionOptions;
             this.commitsLink = UriFactory.CreateDocumentCollectionUri(databaseName, collectionOptions.CollectionName);
             this.storedProcLink = UriFactory.CreateStoredProcedureUri(databaseName, collectionOptions.CollectionName, AppendStoredProcedureName);
-            this.subscriptionOptions = subscriptionOptions;
             this.loggingOptions = loggingOptions;
             this.typeMap = typeMap;
         }
@@ -90,24 +88,6 @@ namespace SimpleEventStore.AzureDocumentDb
             }
 
             return events.AsReadOnly();
-        }
-
-        public ISubscription SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, Action<ISubscription, Exception> onStopped, string checkpoint)
-        {
-            EnsureSubscriptionsAreEnabled();
-            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
-
-            var subscription = new Subscription(this.client, this.commitsLink, onNextEvent, onStopped, checkpoint, this.subscriptionOptions, this.loggingOptions, this.typeMap);
-            subscription.Start();
-            return subscription;
-        }
-
-        private void EnsureSubscriptionsAreEnabled()
-        {
-            if (subscriptionOptions == null)
-            {
-                throw new SubscriptionsNotConfiguredException("Ensure subscription options have been supplied prior to using subscription features.");
-            }
         }
 
         private async Task CreateDatabaseIfItDoesNotExist()

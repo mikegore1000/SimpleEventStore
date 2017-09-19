@@ -40,28 +40,6 @@ var events = await subject.ReadStreamForwards(streamId);
 ```
 You can either read all events in a stream, or a subset of events.  Only read all events if you know the maximum size of a stream is going to be low and that you always need to read all events as part of your workload e.g. replaying events to project current state for a DDD aggregate.
 
-### Catch up subscriptions
-```csharp
-eventStore.SubscribeToAll(
-    (events, checkpoint) =>
-    {
-        // Process events...
-        // Then store the checkpoint...
-    },
-    "<PREVIOUS CHECKPOINT>");
-```
-Catch up subscriptions allow you to subscribe to events after they have been written to the event store.  If no previous checkpoint is supplied then the subscription will process all events in the event store.  
-
-Storing the checkpoint allows you to resume a subscription in the case of process failure and should only be done once all events supplied in the callback have been processed.  This ensures that events are not missed.
-
-It is possible to have multiple catch up subscriptions running, for example to
-- Publish messages onto a service bus
-- Populate a read model
-
-Each subscription **must** perform an independant task.  It is not possible to run multiple instances of the same catch up subscription as it would mean high amounts of duplicate processing as each process instance would read the same checkpoint.
-
-The number of events received will vary depending on the storage engine configuration.
-
 ## Cosmos DB
 ```csharp
 DocumentClient client; // Set this up as required
@@ -73,11 +51,6 @@ return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
    	{
 		o.ConsistencyLevel = consistencyLevelEnum;
 		o.CollectionRequestUnits = 400;
-	})
-	.UseSubscriptions(o =>
-	{
-		o.MaxItemCount = 1;
-		o.PollEvery = TimeSpan.FromSeconds(0.5);
 	})
 	.UseLogging(o =>
 	{
