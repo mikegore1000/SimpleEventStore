@@ -77,7 +77,7 @@ Only use one of the following consistency levels
 Sets up callbacks per Cosmos DB operation performed.  This is useful if you want to record per call data e.g. RU cost of each operation.
 
 ### UseTypeMap
-Allows you to control the event body/metadata type names.  Bult in implementations
+Allows you to control the event body/metadata type names.  Built in implementations
 - DefaultSerializationTypeMap - uses the AssemblyQualifiedName of the type. (default)
 - ConfigurableSerializationTypeMap - provides full control.
 
