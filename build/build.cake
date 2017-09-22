@@ -96,7 +96,7 @@ Task("Package")
         Configuration = configuration,
         NoBuild = true,
         OutputDirectory = outputDir,
-        ArgumentCustomization = args => args.Append("/p:PackageVersion=" + buildVersion + " /p:PackageVersion=" + buildVersion)
+        ArgumentCustomization = args => args.Append("/p:Version=" + buildVersion + " /p:PackageVersion=" + buildVersion)
     };
 
     DotNetCorePack("./../src/SimpleEventStore/SimpleEventStore/", settings);
