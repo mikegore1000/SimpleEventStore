@@ -50,7 +50,7 @@ Task("Build")
     DotNetCoreBuild(solutionFile, new DotNetCoreBuildSettings {
         Configuration = configuration,
         NoIncremental = true,
-        ArgumentCustomization = args => args.Append("/p:Version=\"" + buildVersion + "\" /p:PackageVersion=\"" + buildVersion + "\"")
+        ArgumentCustomization = args => args.Append("/p:BuildVersion=" + buildVersion)
     });
 });
 
@@ -96,7 +96,7 @@ Task("Package")
         Configuration = configuration,
         NoBuild = true,
         OutputDirectory = outputDir,
-        ArgumentCustomization = args => args.Append("/p:Version=\"" + buildVersion + "\" /p:PackageVersion=\"" + buildVersion + "\"")
+        ArgumentCustomization = args => args.Append("/p:BuildVersion=" + buildVersion)
     };
 
     DotNetCorePack("./../src/SimpleEventStore/SimpleEventStore/", settings);
