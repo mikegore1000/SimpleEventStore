@@ -43,7 +43,16 @@ namespace SimpleEventStore.InMemory
 
         public Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
-            IReadOnlyCollection<StorageEvent> result = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
+            IReadOnlyCollection<StorageEvent> result;
+            if (!streams.ContainsKey(streamId))
+            {
+                result = new List<StorageEvent>(0).AsReadOnly();
+            }
+            else
+            {
+                result = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
+            }
+             
             return Task.FromResult(result);
         }
 

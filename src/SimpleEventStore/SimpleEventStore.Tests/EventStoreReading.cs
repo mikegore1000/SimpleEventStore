@@ -13,6 +13,17 @@ namespace SimpleEventStore.Tests
     public abstract class EventStoreReading : EventStoreTestBase
     {
         [Fact]
+        public async Task when_reading_a_stream_which_has_no_events_an_empty_list_is_returned()
+        {
+            var streamId = Guid.NewGuid().ToString();
+            var subject = await GetEventStore();
+
+            var events = await subject.ReadStreamForwards(streamId);
+
+            Assert.Equal(0, events.Count());
+        }
+
+        [Fact]
         public async Task when_reading_a_stream_all_events_are_returned()
         {
             var streamId = Guid.NewGuid().ToString();
