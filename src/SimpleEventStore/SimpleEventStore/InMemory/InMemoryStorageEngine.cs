@@ -1,14 +1,14 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleEventStore.InMemory
 {
     public class InMemoryStorageEngine : IStorageEngine
     {
+        private static readonly IReadOnlyCollection<StorageEvent> EmptyStream = new StorageEvent[0];
+
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
         private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
 
@@ -25,7 +25,7 @@ namespace SimpleEventStore.InMemory
 
                 if (firstEvent.EventNumber - 1 != streams[streamId].Count)
                 {
-                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {@streamId}. Expected revision {firstEvent.EventNumber} : Actual revision {streams[streamId].Count}");
+                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {streamId}. Expected revision {firstEvent.EventNumber} : Actual revision {streams[streamId].Count}");
                 }
 
                 streams[streamId].AddRange(events);
@@ -43,17 +43,13 @@ namespace SimpleEventStore.InMemory
 
         public Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
-            IReadOnlyCollection<StorageEvent> result;
             if (!streams.ContainsKey(streamId))
             {
-                result = new List<StorageEvent>(0).AsReadOnly();
+                return Task.FromResult(EmptyStream);
             }
-            else
-            {
-                result = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
-            }
-             
-            return Task.FromResult(result);
+
+            IReadOnlyCollection<StorageEvent> stream = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
+            return Task.FromResult(stream);
         }
 
         public Task<IStorageEngine> Initialise()
