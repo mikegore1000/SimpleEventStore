@@ -92,42 +92,26 @@ namespace SimpleEventStore.AzureDocumentDb
 
         private async Task CreateDatabaseIfItDoesNotExist()
         {
-            var databaseExistsQuery = client.CreateDatabaseQuery()
-                .Where(x => x.Id == databaseName)
-                .Take(1)
-                .AsDocumentQuery();
-
-            if (!(await databaseExistsQuery.ExecuteNextAsync<Database>()).Any())
-            {
-                await client.CreateDatabaseAsync(new Database {Id = databaseName});
-            }
+            await client.CreateDatabaseIfNotExistsAsync(new Database { Id = databaseName });
         }
 
         private async Task CreateCollectionIfItDoesNotExist()
         {
             var databaseUri = UriFactory.CreateDatabaseUri(databaseName);
 
-            var commitsCollectionQuery = client.CreateDocumentCollectionQuery(databaseUri)
-                .Where(x => x.Id == collectionOptions.CollectionName)
-                .Take(1)
-                .AsDocumentQuery();
+            var collection = new DocumentCollection();
+            collection.Id = collectionOptions.CollectionName;
+            collection.PartitionKey.Paths.Add("/streamId");
+            collection.IndexingPolicy.IncludedPaths.Add(new IncludedPath { Path = "/*" });
+            collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/body/*"});
+            collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/metadata/*" });
 
-            if (!(await commitsCollectionQuery.ExecuteNextAsync<DocumentCollection>()).Any())
+            var requestOptions = new RequestOptions
             {
-                var collection = new DocumentCollection();
-                collection.Id = collectionOptions.CollectionName;
-                collection.PartitionKey.Paths.Add("/streamId");
-                collection.IndexingPolicy.IncludedPaths.Add(new IncludedPath { Path = "/*" });
-                collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/body/*"});
-                collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/metadata/*" });
+                OfferThroughput = collectionOptions.CollectionRequestUnits
+            };
 
-                var requestOptions = new RequestOptions
-                {
-                    OfferThroughput = collectionOptions.CollectionRequestUnits
-                };
-
-                await client.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions);
-            }
+            await client.CreateDocumentCollectionIfNotExistsAsync(databaseUri, collection, requestOptions);
         }
 
         private async Task CreateAppendStoredProcedureIfItDoesNotExist()
