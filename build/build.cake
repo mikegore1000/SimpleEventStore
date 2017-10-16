@@ -1,5 +1,6 @@
 #tool "nuget:?package=xunit.runner.console"
-#addin "Cake.Json"
+#addin nuget:?package=Cake.Json&version=1.0.2.13
+#addin nuget:?package=Newtonsoft.Json&version=9.0.1
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
