@@ -1,11 +1,12 @@
 ﻿using System;
-using Xunit;
+using NUnit.Framework;
 
 namespace SimpleEventStore.Tests
 {
+    [TestFixture]
     public class StorageEventTests
     {
-        [Fact]
+        [Test]
         public void when_creating_a_new_instance_the_properties_are_mapped()
         {
             var eventId = Guid.NewGuid();
@@ -13,11 +14,11 @@ namespace SimpleEventStore.Tests
 
             var sut = new StorageEvent("STREAMID", @event, 1);
 
-            Assert.Equal("STREAMID", sut.StreamId);
-            Assert.Equal("BODY", sut.EventBody);
-            Assert.Equal("METADATA", sut.Metadata);
-            Assert.Equal(1, sut.EventNumber);
-            Assert.Equal(eventId, sut.EventId);
+            Assert.That(sut.StreamId, Is.EqualTo("STREAMID"));
+            Assert.That(sut.EventBody, Is.EqualTo("BODY"));
+            Assert.That(sut.Metadata, Is.EqualTo("METADATA"));
+            Assert.That(sut.EventNumber, Is.EqualTo(1));
+            Assert.That(sut.EventId, Is.EqualTo(eventId));
         }
     }
 }

@@ -1,45 +1,46 @@
 ﻿using System;
 using Microsoft.Azure.Documents.Client;
-using Xunit;
+using NUnit.Framework;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
+    [TestFixture]
     public class AzureDocumentDbStorageEngineBuilderTests
     {
-        [Fact]
+        [Test]
         public void when_creating_an_instance_the_document_client_must_be_supplied()
         {
             Assert.Throws<ArgumentNullException>(() => new AzureDocumentDbStorageEngineBuilder(null, "Test"));
         }
 
-        [Fact]
+        [Test]
         public void when_creating_an_instance_the_database_name_must_be_supplied()
         {
             Assert.Throws<ArgumentException>(() => new AzureDocumentDbStorageEngineBuilder(CreateClient(), null));
         }
 
-        [Fact]
+        [Test]
         public void when_setting_collection_settings_a_callback_must_be_supplied()
         {
             var builder = new AzureDocumentDbStorageEngineBuilder(CreateClient(), "Test");
             Assert.Throws<ArgumentNullException>(() => builder.UseCollection(null));
         }
 
-        [Fact]
+        [Test]
         public void when_setting_subscription_settings_a_callback_must_be_supplied()
         {
             var builder = new AzureDocumentDbStorageEngineBuilder(CreateClient(), "Test");
             Assert.Throws<ArgumentNullException>(() => builder.UseCollection(null));
         }
 
-        [Fact]
+        [Test]
         public void when_setting_logging_settings_a_callback_must_be_supplied()
         {
             var builder = new AzureDocumentDbStorageEngineBuilder(CreateClient(), "Test");
             Assert.Throws<ArgumentNullException>(() => builder.UseLogging(null));
         }
 
-        [Fact]
+        [Test]
         public void when_setting_the_type_map_it_must_be_supplied()
         {
             var builder = new AzureDocumentDbStorageEngineBuilder(CreateClient(), "Test");

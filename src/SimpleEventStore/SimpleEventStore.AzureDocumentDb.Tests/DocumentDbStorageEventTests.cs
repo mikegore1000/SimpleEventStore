@@ -2,13 +2,14 @@
 using System.Reflection;
 using Newtonsoft.Json.Linq;
 using SimpleEventStore.Tests.Events;
-using Xunit;
+using NUnit.Framework;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
+    [TestFixture]
     public class DocumentDbStorageEventTests
     {
-        [Fact]
+        [Test]
         public void when_converting_to_a_storage_event_it_succeeds()
         {
             var id = Guid.NewGuid();
@@ -30,11 +31,11 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                 t => t.Name);
             var result = sut.ToStorageEvent(typeMap);
 
-            Assert.Equal(sut.StreamId, result.StreamId);
-            Assert.Equal(body.OrderId, ((OrderCreated)result.EventBody).OrderId);
-            Assert.Equal(metadata.Value, ((TestMetadata)result.Metadata).Value);
-            Assert.Equal(sut.EventNumber, result.EventNumber);
-            Assert.Equal(sut.EventId, result.EventId);
+            Assert.That(result.StreamId, Is.EqualTo(sut.StreamId));
+            Assert.That(((OrderCreated)result.EventBody).OrderId, Is.EqualTo(body.OrderId));
+            Assert.That(((TestMetadata)result.Metadata).Value, Is.EqualTo(metadata.Value));
+            Assert.That(result.EventNumber, Is.EqualTo(sut.EventNumber));
+            Assert.That(result.EventId, Is.EqualTo(sut.EventId));
         }
     }
 }

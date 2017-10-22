@@ -1,4 +1,3 @@
-#tool "nuget:?package=xunit.runner.console"
 #addin nuget:?package=Cake.Json&version=1.0.2.13
 #addin nuget:?package=Newtonsoft.Json&version=9.0.1
 
@@ -21,10 +20,10 @@ var buildVersion = Argument("buildVersion", "1.0.0");
 var solutionDir = "../src/SimpleEventStore/";
 var solutionFile = solutionDir + "SimpleEventStore.sln";
 var documentDbTestConfigFiles = new [] {
-	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json"),
-	File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/net452/appsettings.json")
+    File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json"),
+    File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/net452/appsettings.json")
 };
-var testDirs = GetDirectories(solutionDir + "*.Tests");
+var testProjs = GetFiles(solutionDir + "**/*.Tests.csproj");
 var outputDir = "./nuget";
 
 //////////////////////////////////////////////////////////////////////
@@ -58,15 +57,17 @@ Task("Build")
 Task("Transform-Unit-Test-Config")
     .Does(() =>
 {
-	foreach(var documentDbTestConfigFile in documentDbTestConfigFiles)
-	{
-		var configJson = ParseJsonFromFile(documentDbTestConfigFile);
-		configJson["Uri"] = uri;
-		configJson["AuthKey"] = authKey;
-		configJson["ConsistencyLevel"] = consistencyLevel;
+    foreach(var documentDbTestConfigFile in documentDbTestConfigFiles)
+    {
+        var configJson = ParseJsonFromFile(documentDbTestConfigFile);
+        configJson["Uri"] = uri;
+        configJson["AuthKey"] = authKey;
+        configJson["ConsistencyLevel"] = consistencyLevel;
 
-		SerializeJsonToFile(documentDbTestConfigFile, configJson);
-	}
+        SerializeJsonToFile(documentDbTestConfigFile, configJson);
+
+        Information("Transformed " + documentDbTestConfigFile);
+    }
 });
 
 Task("Run-Unit-Tests")
@@ -74,17 +75,12 @@ Task("Run-Unit-Tests")
     .IsDependentOn("Transform-Unit-Test-Config")
     .Does(() =>
 {
-    foreach(var testPath in testDirs)
+    foreach(var testPath in testProjs)
     {
-        var returnCode = StartProcess("dotnet", new ProcessSettings {
-            Arguments = "xunit -c " + configuration + " --no-build",
-            WorkingDirectory = testPath
+        DotNetCoreTest(testPath.FullPath, new DotNetCoreTestSettings { 
+                Configuration = configuration,
+                NoBuild = true
         });
-
-        if(returnCode != 0)
-        {
-            throw new Exception("Unit test failure for test project " + testPath);
-        }
     }
 });
 

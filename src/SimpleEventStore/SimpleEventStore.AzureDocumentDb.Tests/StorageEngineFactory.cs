@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -14,7 +13,6 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
         internal static async Task<IStorageEngine> Create(string databaseName)
         {
             var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
                 .Build();
 

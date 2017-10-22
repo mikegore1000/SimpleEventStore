@@ -1,47 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Text;
 using System.Net;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Xunit;
+using NUnit.Framework;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
+    [TestFixture]
     public class ResponseInformationBuilding
     {
-        [Fact]
+        [Test]
         public void when_building_from_a_write_response_all_target_fields_are_mapped()
         {
             var result = ResponseInformation.FromWriteResponse(new FakeStoredProcedureResponse<dynamic>());
 
-            Assert.Equal(Expected.CurrentResourceQuotaUsage, result.CurrentResourceQuotaUsage);
-            Assert.Equal(Expected.MaxResourceQuota, result.MaxResourceQuota);
-            Assert.Equal(Expected.RequestCharge, result.RequestCharge);
-            Assert.Equal(Expected.ResponseHeaders, result.ResponseHeaders);
+            Assert.That(result.CurrentResourceQuotaUsage, Is.EqualTo(Expected.CurrentResourceQuotaUsage));
+            Assert.That(result.MaxResourceQuota, Is.EqualTo(Expected.MaxResourceQuota));
+            Assert.That(result.RequestCharge, Is.EqualTo(Expected.RequestCharge));
+            Assert.That(result.ResponseHeaders, Is.EqualTo(Expected.ResponseHeaders));
         }
 
-        [Fact]
+        [Test]
         public void when_building_from_a_read_response_all_target_fields_are_mapped()
         {
             var result = ResponseInformation.FromReadResponse(new FakeFeedResponse<DocumentDbStorageEvent>());
 
-            Assert.Equal(Expected.CurrentResourceQuotaUsage, result.CurrentResourceQuotaUsage);
-            Assert.Equal(Expected.MaxResourceQuota, result.MaxResourceQuota);
-            Assert.Equal(Expected.RequestCharge, result.RequestCharge);
-            Assert.Equal(Expected.ResponseHeaders, result.ResponseHeaders);
+            Assert.That(result.CurrentResourceQuotaUsage, Is.EqualTo(Expected.CurrentResourceQuotaUsage));
+            Assert.That(result.MaxResourceQuota, Is.EqualTo(Expected.MaxResourceQuota));
+            Assert.That(result.RequestCharge, Is.EqualTo(Expected.RequestCharge));
+            Assert.That(result.ResponseHeaders, Is.EqualTo(Expected.ResponseHeaders));
         }
 
-        [Fact]
+        [Test]
         public void when_building_from_a_subscription_read_response_all_target_fields_are_mapped()
         {
             var result = ResponseInformation.FromSubscriptionReadResponse(new FakeFeedResponse<Document>());
 
-            Assert.Equal(Expected.CurrentResourceQuotaUsage, result.CurrentResourceQuotaUsage);
-            Assert.Equal(Expected.MaxResourceQuota, result.MaxResourceQuota);
-            Assert.Equal(Expected.RequestCharge, result.RequestCharge);
-            Assert.Equal(Expected.ResponseHeaders, result.ResponseHeaders);
+            Assert.That(result.CurrentResourceQuotaUsage, Is.EqualTo(Expected.CurrentResourceQuotaUsage));
+            Assert.That(result.MaxResourceQuota, Is.EqualTo(Expected.MaxResourceQuota));
+            Assert.That(result.RequestCharge, Is.EqualTo(Expected.RequestCharge));
+            Assert.That(result.ResponseHeaders, Is.EqualTo(Expected.ResponseHeaders));
         }
 
         private static class Expected
