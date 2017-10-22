@@ -19,10 +19,6 @@ var buildVersion = Argument("buildVersion", "1.0.0");
 // Define directories.
 var solutionDir = "../src/SimpleEventStore/";
 var solutionFile = solutionDir + "SimpleEventStore.sln";
-var documentDbTestConfigFiles = new [] {
-    File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/netcoreapp1.1/appsettings.json"),
-    File("../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/net452/appsettings.json")
-};
 var testProjs = GetFiles(solutionDir + "**/*.Tests.csproj");
 var outputDir = "./nuget";
 
@@ -57,6 +53,8 @@ Task("Build")
 Task("Transform-Unit-Test-Config")
     .Does(() =>
 {
+    var documentDbTestConfigFiles = GetFiles(solutionDir + "SimpleEventStore.AzureDocumentDb.Tests/bin/" + configuration + "/**/appsettings.json");
+
     foreach(var documentDbTestConfigFile in documentDbTestConfigFiles)
     {
         var configJson = ParseJsonFromFile(documentDbTestConfigFile);
