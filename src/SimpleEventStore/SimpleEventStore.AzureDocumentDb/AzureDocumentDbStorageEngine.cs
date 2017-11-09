@@ -101,6 +101,7 @@ namespace SimpleEventStore.AzureDocumentDb
 
             var collection = new DocumentCollection();
             collection.Id = collectionOptions.CollectionName;
+            collection.DefaultTimeToLive = collectionOptions.DefaultTimeToLive;
             collection.PartitionKey.Paths.Add("/streamId");
             collection.IndexingPolicy.IncludedPaths.Add(new IncludedPath { Path = "/*" });
             collection.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/body/*"});

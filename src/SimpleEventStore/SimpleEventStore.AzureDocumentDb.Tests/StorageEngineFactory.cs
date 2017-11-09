@@ -10,14 +10,12 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
 {
     internal static class StorageEngineFactory
     {
-        internal static async Task<IStorageEngine> Create(string databaseName)
+        internal static async Task<IStorageEngine> Create(string databaseName, Action<CollectionOptions> collectionOverrides = null)
         {
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var documentDbUri = config["Uri"];
-            var authKey = config["AuthKey"];
             var consistencyLevel = config["ConsistencyLevel"];
             ConsistencyLevel consistencyLevelEnum;
 
@@ -26,13 +24,14 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
                 throw new Exception($"The ConsistencyLevel value {consistencyLevel} is not supported");
             }
 
-            DocumentClient client = new DocumentClient(new Uri(documentDbUri), authKey);
+            var client = DocumentClientFactory.Create(databaseName);
 
             return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
                 .UseCollection(o =>
                 {
                     o.ConsistencyLevel = consistencyLevelEnum;
-                    o.CollectionRequestUnits = 400;
+                    o.CollectionRequestUnits = TestConstants.RequestUnits;
+                    if(collectionOverrides != null) collectionOverrides(o);
                 })
                 .UseTypeMap(new ConfigurableSerializationTypeMap()
                     .RegisterTypes(
