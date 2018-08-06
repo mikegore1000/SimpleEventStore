@@ -12,7 +12,7 @@
     <ProjectReference Include="..\SimpleEventStore\SimpleEventStore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\AppendToStream.js" />
+    <EmbeddedResource Include="Resources\appendToStream.js" />
   </ItemGroup>
   <PropertyGroup>
     <Title>Asos.SimpleEventStore.AzureDocumentDb</Title>
