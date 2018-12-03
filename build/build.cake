@@ -98,22 +98,6 @@ Task("Package")
     DotNetCorePack("./../src/SimpleEventStore/SimpleEventStore.AzureDocumentDb/", settings);
 });
 
-
-Task("Deploy")
-    .IsDependentOn("Package")
-    .Does(() => 
-{
-    var nugetSource = Argument<string>("nugetSource");
-    var nugetApiKey = Argument<string>("nugetApiKey");
-
-    var package = GetFiles(outputDir + "/*.nupkg");
-
-    NuGetPush(package, new NuGetPushSettings {
-        Source = nugetSource,
-        ApiKey = nugetApiKey
-    });
-});
-
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
