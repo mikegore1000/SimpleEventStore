@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +7,10 @@ namespace SimpleEventStore.InMemory
 {
     public class InMemoryStorageEngine : IStorageEngine
     {
+        private static readonly IReadOnlyCollection<StorageEvent> EmptyStream = new StorageEvent[0];
+
         private readonly ConcurrentDictionary<string, List<StorageEvent>> streams = new ConcurrentDictionary<string, List<StorageEvent>>();
         private readonly List<StorageEvent> allEvents = new List<StorageEvent>();
-        private readonly List<Subscription> subscriptions = new List<Subscription>();
 
         public Task AppendToStream(string streamId, IEnumerable<StorageEvent> events)
         {
@@ -25,7 +25,7 @@ namespace SimpleEventStore.InMemory
 
                 if (firstEvent.EventNumber - 1 != streams[streamId].Count)
                 {
-                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {@streamId}. Expected revision {firstEvent.EventNumber} : Actual revision {streams[streamId].Count}");
+                    throw new ConcurrencyException($"Concurrency conflict when appending to stream {streamId}. Expected revision {firstEvent.EventNumber} : Actual revision {streams[streamId].Count}");
                 }
 
                 streams[streamId].AddRange(events);
@@ -43,66 +43,18 @@ namespace SimpleEventStore.InMemory
 
         public Task<IReadOnlyCollection<StorageEvent>> ReadStreamForwards(string streamId, int startPosition, int numberOfEventsToRead)
         {
-            IReadOnlyCollection<StorageEvent> result = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
-            return Task.FromResult(result);
+            if (!streams.ContainsKey(streamId))
+            {
+                return Task.FromResult(EmptyStream);
+            }
+
+            IReadOnlyCollection<StorageEvent> stream = streams[streamId].Skip(startPosition - 1).Take(numberOfEventsToRead).ToList().AsReadOnly();
+            return Task.FromResult(stream);
         }
 
-        public void SubscribeToAll(Action<IReadOnlyCollection<StorageEvent>, string> onNextEvent, string checkpoint)
+        public Task<IStorageEngine> Initialise()
         {
-            Guard.IsNotNull(nameof(onNextEvent), onNextEvent);
-
-            var subscription = new Subscription(this.allEvents, onNextEvent, checkpoint);
-            this.subscriptions.Add(subscription);
-            subscription.Start();
-        }
-
-        private class Subscription
-        {
-            private readonly IEnumerable<StorageEvent> allStream;
-            private readonly Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent;
-            private string initialCheckpoint;
-            private int currentPosition;
-            private Task workerTask;
-
-            public Subscription(IEnumerable<StorageEvent> allStream, Action<IReadOnlyCollection<StorageEvent>, string> onNewEvent, string checkpoint)
-            {
-                this.allStream = allStream;
-                this.onNewEvent = onNewEvent;
-                this.initialCheckpoint = checkpoint;
-            }
-
-            public void Start()
-            {
-                workerTask = Task.Run(async () =>
-                {
-                    while (true)
-                    {
-                        ReadEvents();
-                        await Task.Delay(500);
-                    }
-                });
-            }
-
-            private void ReadEvents()
-            {
-                var snapshot = allStream.Skip(this.currentPosition).ToList();
-
-                foreach (var @event in snapshot)
-                {
-                    bool dispatchEvents = true;
-
-                    if (this.initialCheckpoint == null || this.initialCheckpoint == @event.EventId.ToString())
-                    {
-                        dispatchEvents = this.initialCheckpoint == null;
-                    }
-
-                    if(dispatchEvents)
-                    {
-                        this.onNewEvent(new[] { @event }, @event.EventId.ToString());
-                        this.currentPosition++;
-                    }
-                }
-            }
+            return Task.FromResult<IStorageEngine>(this);
         }
     }
 }

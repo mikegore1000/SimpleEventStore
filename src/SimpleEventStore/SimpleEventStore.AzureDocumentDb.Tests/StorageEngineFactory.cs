@@ -1,25 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Extensions.Configuration;
+using SimpleEventStore.Tests.Events;
 
 namespace SimpleEventStore.AzureDocumentDb.Tests
 {
     internal static class StorageEngineFactory
     {
-        internal static async Task<IStorageEngine> Create(string databaseName)
+        internal static async Task<IStorageEngine> Create(string databaseName, Action<CollectionOptions> collectionOverrides = null)
         {
-            var documentDbUri = "https://localhost:8081/";
-            var authKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
-            DocumentClient client = new DocumentClient(new Uri(documentDbUri), authKey);
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
 
-            var storageEngine = new AzureDocumentDbStorageEngine(client, databaseName, new DatabaseOptions(ConsistencyLevel.BoundedStaleness, 400), new SubscriptionOptions(maxItemCount: 1, pollEvery: TimeSpan.FromSeconds(0.5)));
-            await storageEngine.Initialise();
+            var consistencyLevel = config["ConsistencyLevel"];
+            ConsistencyLevel consistencyLevelEnum;
 
-            return storageEngine;
+            if(!Enum.TryParse(consistencyLevel, true, out consistencyLevelEnum))
+            {
+                throw new Exception($"The ConsistencyLevel value {consistencyLevel} is not supported");
+            }
+
+            var client = DocumentClientFactory.Create(databaseName);
+
+            return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
+                .UseCollection(o =>
+                {
+                    o.ConsistencyLevel = consistencyLevelEnum;
+                    o.CollectionRequestUnits = TestConstants.RequestUnits;
+                    if(collectionOverrides != null) collectionOverrides(o);
+                })
+                .UseTypeMap(new ConfigurableSerializationTypeMap()
+                    .RegisterTypes(
+                        typeof(OrderCreated).GetTypeInfo().Assembly,
+                        t => t.Namespace != null && t.Namespace.EndsWith("Events"),
+                        t => t.Name))
+                .Build()
+                .Initialise();
         }
     }
 }

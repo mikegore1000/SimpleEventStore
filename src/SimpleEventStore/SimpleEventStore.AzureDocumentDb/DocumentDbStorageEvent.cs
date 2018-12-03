@@ -1,11 +1,13 @@
 using System;
+using System.Runtime.Serialization;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SimpleEventStore.AzureDocumentDb
 {
-    internal class DocumentDbStorageEvent
+    public class DocumentDbStorageEvent
     {
         [JsonProperty("id")]
         public string Id { get; set;  }
@@ -31,17 +33,17 @@ namespace SimpleEventStore.AzureDocumentDb
         [JsonProperty("eventNumber")]
         public int EventNumber { get; set; }
 
-        public static DocumentDbStorageEvent FromStorageEvent(StorageEvent @event)
+        public static DocumentDbStorageEvent FromStorageEvent(StorageEvent @event, ISerializationTypeMap typeMap)
         {
             var docDbEvent = new DocumentDbStorageEvent();
             docDbEvent.Id = $"{@event.StreamId}:{@event.EventNumber}";
             docDbEvent.EventId = @event.EventId;
             docDbEvent.Body = JObject.FromObject(@event.EventBody);
-            docDbEvent.BodyType = @event.EventBody.GetType().AssemblyQualifiedName;
+            docDbEvent.BodyType = typeMap.GetNameFromType(@event.EventBody.GetType());
             if (@event.Metadata != null)
             {
                 docDbEvent.Metadata = JObject.FromObject(@event.Metadata);
-                docDbEvent.MetadataType = @event.Metadata.GetType().AssemblyQualifiedName;
+                docDbEvent.MetadataType = typeMap.GetNameFromType(@event.Metadata.GetType());
             }
             docDbEvent.StreamId = @event.StreamId;
             docDbEvent.EventNumber = @event.EventNumber;
@@ -66,10 +68,10 @@ namespace SimpleEventStore.AzureDocumentDb
             return docDbEvent;
         }
 
-        public StorageEvent ToStorageEvent()
+        public StorageEvent ToStorageEvent(ISerializationTypeMap typeMap)
         {
-            object body = Body.ToObject(Type.GetType(BodyType));
-            object metadata = Metadata?.ToObject(Type.GetType(MetadataType));
+            object body = Body.ToObject(typeMap.GetTypeFromName(BodyType));
+            object metadata = Metadata?.ToObject(typeMap.GetTypeFromName(MetadataType));
             return new StorageEvent(StreamId, new EventData(EventId, body, metadata), EventNumber);
         }
     }

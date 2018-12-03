@@ -1,18 +1,29 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using SimpleEventStore.Tests.Events;
-using Xunit;
 
 namespace SimpleEventStore.Tests
 {
     // TODOs
     // 1. Make partioning support configurable
     // 2. Allow for lower levels of consistency than just strong
-
+    [TestFixture]
     public abstract class EventStoreReading : EventStoreTestBase
     {
-        [Fact]
+        [Test]
+        public async Task when_reading_a_stream_which_has_no_events_an_empty_list_is_returned()
+        {
+            var streamId = Guid.NewGuid().ToString();
+            var subject = await GetEventStore();
+
+            var events = await subject.ReadStreamForwards(streamId);
+
+            Assert.That(events.Count, Is.EqualTo(0));
+        }
+
+        [Test]
         public async Task when_reading_a_stream_all_events_are_returned()
         {
             var streamId = Guid.NewGuid().ToString();
@@ -23,22 +34,22 @@ namespace SimpleEventStore.Tests
 
             var events = await subject.ReadStreamForwards(streamId);
 
-            Assert.Equal(2, events.Count());
-            Assert.IsType<OrderCreated>(events.First().EventBody);
-            Assert.IsType<OrderDispatched>(events.Skip(1).Single().EventBody);
+            Assert.That(events.Count, Is.EqualTo(2));
+            Assert.That(events.First().EventBody, Is.InstanceOf<OrderCreated>());
+            Assert.That(events.Skip(1).Single().EventBody, Is.InstanceOf<OrderDispatched>());
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
         public async Task when_reading_from_an_invalid_stream_id_an_argument_error_is_thrown(string streamId)
         {
             var eventStore = await GetEventStore();
-            await Assert.ThrowsAsync<ArgumentException>(async () => await eventStore.ReadStreamForwards(streamId));
+            Assert.ThrowsAsync<ArgumentException>(async () => await eventStore.ReadStreamForwards(streamId));
         }
 
-        [Fact]
+        [Test]
         public async Task when_reading_a_stream_only_the_required_events_are_returned()
         {
             var streamId = Guid.NewGuid().ToString();
@@ -49,8 +60,8 @@ namespace SimpleEventStore.Tests
 
             var events = await subject.ReadStreamForwards(streamId, startPosition: 2, numberOfEventsToRead: 1);
 
-            Assert.Equal(1, events.Count());
-            Assert.IsType<OrderDispatched>(events.First().EventBody);
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events.First().EventBody, Is.InstanceOf<OrderDispatched>());
         }
     }
 }
