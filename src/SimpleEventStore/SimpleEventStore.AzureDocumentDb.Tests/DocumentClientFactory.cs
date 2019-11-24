@@ -16,6 +16,7 @@ namespace SimpleEventStore.AzureDocumentDb.Tests
         {
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
                 .Build();
 
             var documentDbUri = config["Uri"];

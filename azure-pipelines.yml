@@ -1,0 +1,55 @@
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pr:
+- master
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+      - task: CosmosDbEmulator@2
+        inputs:
+          containerName: 'azure-cosmosdb-emulator'
+          enableAPI: 'SQL'
+          portMapping: '8081:8081, 8901:8901, 8902:8902, 8979:8979, 10250:10250, 10251:10251, 10252:10252, 10253:10253, 10254:10254, 10255:10255, 10256:10256, 10350:10350'
+          hostDirectory: '$(Build.BinariesDirectory)\azure-cosmosdb-emulator'
+          consistency: 'BoundedStaleness'
+      - task: PowerShell@2
+        inputs:
+          filePath: '.\build.ps1'
+          arguments: '-Uri $(CosmosDbEmulator.Endpoint)'
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testRunner: VSTest
+          testResultsFiles: '**/*.trx'
+      - task: CopyFiles@2
+        inputs:
+          Contents: 'output\*.nupkg'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishBuildArtifacts@1
+- stage: Publish
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+    - job: Publish
+      pool:
+        vmImage: 'vs2017-win2016'
+      steps:        
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            artifactName: 'drop'
+            buildType: 'current'
+            downloadType: 'single'
+            downloadPath: '$(System.ArtifactsDirectory)'
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: 'push'
+            packagesToPush: '$(System.ArtifactsDirectory)/*.nupkg'
+            nuGetFeedType: 'external'
+            publishFeedCredentials: 'ASOS nuget.org feed'
