@@ -50,6 +50,6 @@ stages:
         - task: DotNetCoreCLI@2
           inputs:
             command: 'push'
-            packagesToPush: '$(System.ArtifactsDirectory)\*.nupkg'
+            packagesToPush: '$(System.ArtifactsDirectory)/**/*.nupkg'
             nuGetFeedType: 'external'
             publishFeedCredentials: 'ASOS nuget.org feed'
