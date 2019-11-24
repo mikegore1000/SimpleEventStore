@@ -40,14 +40,14 @@ stages:
     - job: Publish
       pool:
         vmImage: 'vs2017-win2016'
-      steps:        
+      steps:
         - task: DownloadBuildArtifacts@0
           inputs:
             artifactName: 'drop'
             buildType: 'current'
             downloadType: 'single'
             downloadPath: '$(System.ArtifactsDirectory)'
-        - task: DotNetCoreCLI@2
+        - task: NuGetCommand@2
           inputs:
             command: 'push'
             packagesToPush: '$(System.ArtifactsDirectory)/**/*.nupkg'
