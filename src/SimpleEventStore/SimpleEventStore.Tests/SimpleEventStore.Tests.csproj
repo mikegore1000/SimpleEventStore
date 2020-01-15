@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.0</TargetFrameworks>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SimpleEventStore\SimpleEventStore.csproj" />
@@ -14,7 +14,7 @@
   <PropertyGroup>
     <Title>SimpleEventStore.Tests</Title>
     <Company>ASOS</Company>
-    <Copyright>Copyright ASOS ©2016</Copyright>
+    <Copyright>Copyright ASOS © 2020</Copyright>
     <Product>SimpleEventStore.Tests</Product>
   </PropertyGroup>
 </Project>

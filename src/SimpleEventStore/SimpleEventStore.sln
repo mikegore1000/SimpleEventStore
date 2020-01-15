@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CD241C9A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore.Tests", "SimpleEventStore.Tests\SimpleEventStore.Tests.csproj", "{ACA6B3AE-FCB9-45F4-9D6B-66196F98F819}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore.AzureDocumentDb", "SimpleEventStore.AzureDocumentDb\SimpleEventStore.AzureDocumentDb.csproj", "{48C71940-D9B0-446A-9F3D-E6275CD43440}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore.CosmosDb", "SimpleEventStore.CosmosDb\SimpleEventStore.CosmosDb.csproj", "{48C71940-D9B0-446A-9F3D-E6275CD43440}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore.AzureDocumentDb.Tests", "SimpleEventStore.AzureDocumentDb.Tests\SimpleEventStore.AzureDocumentDb.Tests.csproj", "{205A7F81-A496-4400-9A97-D156F88B7883}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleEventStore.CosmosDb.Tests", "SimpleEventStore.CosmosDb.Tests\SimpleEventStore.CosmosDb.Tests.csproj", "{205A7F81-A496-4400-9A97-D156F88B7883}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

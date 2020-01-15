@@ -43,10 +43,10 @@ $env:AuthKey = $AuthKey
 $env:ConsistencyLevel = $ConsistencyLevel
 
 Exec { dotnet test SimpleEventStore.Tests -c $Configuration --no-build --logger trx }
-Exec { dotnet test SimpleEventStore.AzureDocumentDb.Tests -c $Configuration --no-build --logger trx }
+Exec { dotnet test SimpleEventStore.CosmosDb.Tests -c $Configuration --no-build --logger trx }
 
 Write-Stage "Creating nuget packages"
 Exec { dotnet pack SimpleEventStore -c $Configuration -o $outputDir -p:BuildVersion=$buildVersion --no-build }
-Exec { dotnet pack SimpleEventStore.AzureDocumentDb -c $Configuration -o $outputDir  -p:BuildVersion=$buildVersion --no-build }
+Exec { dotnet pack SimpleEventStore.CosmosDb -c $Configuration -o $outputDir  -p:BuildVersion=$buildVersion --no-build }
 
 Pop-Location

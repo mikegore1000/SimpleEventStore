@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <BuildVersion>1.0.0</BuildVersion>
+    <RootNamespace>SimpleEventStore.CosmosDb</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.5.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleEventStore\SimpleEventStore.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\appendToStream.js" />
+  </ItemGroup>
+  <PropertyGroup>
+    <Title>Asos.SimpleEventStore.CosmosDb</Title>
+    <Description>Provides a DocumentDB storage engine for Simple Event Store (SES)</Description>
+    <Company>ASOS</Company>
+    <Copyright>Copyright ASOS © 2020</Copyright>
+    <Product>SimpleEventStore.CosmosDb</Product>
+    <PackageId>Asos.SimpleEventStore.CosmosDb</PackageId>
+    <Authors>ASOS</Authors>
+    <PackageTags>eventsourcing documentdb azure</PackageTags>
+    <PackageProjectUrl>https://github.com/ASOS/SimpleEventStore</PackageProjectUrl>
+    <ApplicationIcon />
+    <OutputTypeEx>library</OutputTypeEx>
+    <Version>$(BuildVersion)</Version>
+    <PackageVersion>$(BuildVersion)</PackageVersion>
+  </PropertyGroup>
+</Project>

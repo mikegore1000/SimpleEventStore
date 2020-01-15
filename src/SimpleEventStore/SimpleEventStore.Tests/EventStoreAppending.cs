@@ -43,7 +43,7 @@ namespace SimpleEventStore.Tests
         [Test]
         [TestCase(-1)]
         [TestCase(1)]
-        public async Task when_appending_to_a_new_stream_with_an_unexpected_version__a_concurrency_error_is_thrown(int expectedVersion)
+        public void when_appending_to_a_new_stream_with_an_unexpected_version__a_concurrency_error_is_thrown(int expectedVersion)
         {
             var streamId = Guid.NewGuid().ToString();
             var @event = new EventData(Guid.NewGuid(), new OrderDispatched(streamId));

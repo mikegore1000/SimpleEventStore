@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <BuildVersion>1.0.0</BuildVersion>
   </PropertyGroup>
   <PropertyGroup>
     <Title>ASOS.SimpleEventStore</Title>
     <Description>Simple Event Store (SES) provides a lightweight event sourcing abstraction.</Description>
     <Company>ASOS</Company>
-    <Copyright>Copyright ASOS ©2016</Copyright>
+    <Copyright>Copyright ASOS © 2020</Copyright>
     <Product>SimpleEventStore</Product>
     <PackageId>Asos.SimpleEventStore</PackageId>
     <Authors>ASOS</Authors>
