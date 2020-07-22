@@ -88,11 +88,24 @@ namespace SimpleEventStore.CosmosDb
                 ? int.MaxValue
                 : startPosition + numberOfEventsToRead;
 
-            var eventsQuery = _collection.GetItemLinqQueryable<CosmosDbStorageEvent>()
-                .Where(x => x.StreamId == streamId && x.EventNumber >= startPosition && x.EventNumber <= endPosition)
-                .OrderBy(x => x.EventNumber)
-                .ToFeedIterator();
+            var queryDefinition = new QueryDefinition(@"
+                    SELECT VALUE e
+                    FROM e
+                    WHERE e.streamId = @StreamId
+                        AND (e.eventNumber BETWEEN @LowerBound AND @UpperBound)
+                    ORDER BY e.eventNumber ASC"
+                )
+                .WithParameter("@StreamId", streamId)
+                .WithParameter("@LowerBound", startPosition)
+                .WithParameter("@UpperBound", endPosition);
 
+            var options = new QueryRequestOptions
+            {
+                MaxItemCount = numberOfEventsToRead,
+                PartitionKey = new PartitionKey(streamId)
+            };
+
+            using var eventsQuery = _collection.GetItemQueryIterator<CosmosDbStorageEvent>(queryDefinition, requestOptions: options);
             var events = new List<StorageEvent>();
 
             while (eventsQuery.HasMoreResults)
