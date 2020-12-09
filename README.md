@@ -41,12 +41,12 @@ You can either read all events in a stream, or a subset of events.  Only read al
 
 ## Cosmos DB
 ```csharp
-DocumentClient client; // Set this up as required
+CosmosClient client; // Set this up as required
 
 // If UseCollection isn't specified, sensible defaults for development are used.
 // If UseSubscriptions isn't supplied the subscription feature is disabled.
 // If UseSharedThroughput isn't supplied the throughput is set only at a collection level
-return await new AzureDocumentDbStorageEngineBuilder(client, databaseName)
+return await new AzureCosmosDbStorageEngineBuilder(client, databaseName)
 	.UseSharedThroughput(o => {
 		o.DatabaseRequestUnits = 400;
 	})
