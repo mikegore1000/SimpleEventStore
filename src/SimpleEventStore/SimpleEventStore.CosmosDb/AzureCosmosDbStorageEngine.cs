@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Scripts;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using Microsoft.Azure.Cosmos.Scripts;
-using Newtonsoft.Json;
 
 namespace SimpleEventStore.CosmosDb
 {
@@ -66,7 +65,7 @@ namespace SimpleEventStore.CosmosDb
                 var result = await _collection.Scripts.ExecuteStoredProcedureAsync<dynamic>(
                     _storedProcedureInformation.Name,
                     new PartitionKey(streamId),
-                    new[] {docs},
+                    new[] { docs },
                     new StoredProcedureRequestOptions
                     {
                         ConsistencyLevel = collectionOptions.ConsistencyLevel
@@ -124,7 +123,9 @@ namespace SimpleEventStore.CosmosDb
 
         private Task<DatabaseResponse> CreateDatabaseIfItDoesNotExist()
         {
-            return _client.CreateDatabaseIfNotExistsAsync(_databaseName, _databaseOptions.DatabaseRequestUnits);
+            return _databaseOptions.DatabaseRequestUnits != null ?
+                _client.CreateDatabaseIfNotExistsAsync(_databaseName, ThroughputProperties.CreateAutoscaleThroughput((int)_databaseOptions.DatabaseRequestUnits)) :
+                _client.CreateDatabaseIfNotExistsAsync(_databaseName);
         }
 
         private Task<ContainerResponse> CreateCollectionIfItDoesNotExist()
@@ -148,8 +149,9 @@ namespace SimpleEventStore.CosmosDb
                 PartitionKeyPath = "/streamId"
             };
 
-            return _database.CreateContainerIfNotExistsAsync(collectionProperties,
-                collectionOptions.CollectionRequestUnits);
+            return collectionOptions.CollectionRequestUnits != null ?
+                _database.CreateContainerIfNotExistsAsync(collectionProperties, ThroughputProperties.CreateAutoscaleThroughput((int)collectionOptions.CollectionRequestUnits)) :
+                _database.CreateContainerIfNotExistsAsync(collectionProperties);
         }
 
         private async Task InitialiseStoredProcedure()
@@ -169,7 +171,7 @@ namespace SimpleEventStore.CosmosDb
         {
             if (collectionOptions.CollectionRequestUnits != null)
             {
-                await _collection.ReplaceThroughputAsync((int) collectionOptions.CollectionRequestUnits);
+                await _collection.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput((int)collectionOptions.CollectionRequestUnits));
             }
         }
 
@@ -177,7 +179,7 @@ namespace SimpleEventStore.CosmosDb
         {
             if (_databaseOptions.DatabaseRequestUnits != null)
             {
-                await _database.ReplaceThroughputAsync((int) _databaseOptions.DatabaseRequestUnits);
+                await _database.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput((int)_databaseOptions.DatabaseRequestUnits));
             }
         }
     }
