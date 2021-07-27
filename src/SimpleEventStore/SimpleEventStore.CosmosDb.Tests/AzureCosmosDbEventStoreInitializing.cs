@@ -37,11 +37,11 @@ namespace SimpleEventStore.CosmosDb.Tests
 
             var collectionResponse = await collection.ReadContainerAsync();
             var collectionProperties = collectionResponse.Resource;
-            
+
             var offer = await collection.ReadThroughputAsync();
 
             Assert.That(expectedStoredProcedure, Is.Not.Null);
-            Assert.That(offer, Is.EqualTo(TestConstants.RequestUnits));
+            Assert.That(offer, Is.EqualTo(TestConstants.RequestUnits / 10));
             Assert.That(collectionProperties.DefaultTimeToLive, Is.Null);
             Assert.That(collectionProperties.PartitionKeyPath, Is.EqualTo("/streamId"));
             Assert.That(collectionProperties.IndexingPolicy.IncludedPaths.Count, Is.EqualTo(1));
@@ -54,12 +54,12 @@ namespace SimpleEventStore.CosmosDb.Tests
         [Test]
         public async Task when_using_shared_throughput_it_is_set_at_a_database_level()
         {
-            const int dbThroughput = 800;
+            const int dbThroughput = 8000;
             var collectionName = "SharedCollection_" + Guid.NewGuid();
 
             var storageEngine = await InitialiseStorageEngine(collectionName, dbThroughput: dbThroughput);
 
-            Assert.AreEqual(dbThroughput, await GetDatabaseThroughput());
+            Assert.AreEqual(dbThroughput / 10, await GetDatabaseThroughput());
             Assert.AreEqual(null, await GetCollectionThroughput(collectionName));
         }
 
@@ -86,34 +86,33 @@ namespace SimpleEventStore.CosmosDb.Tests
         [Test]
         public async Task when_throughput_is_set_offer_is_updated()
         {
-            var dbThroughput = 800;
-            var collectionThroughput = 400;
+            var dbThroughput = 8000;
+            var collectionThroughput = 4000;
             var collectionName = "UpdateThroughput_" + Guid.NewGuid();
 
             await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
 
-            Assert.AreEqual(dbThroughput, await GetDatabaseThroughput());
-            Assert.AreEqual(collectionThroughput, await GetCollectionThroughput(collectionName));
+            Assert.AreEqual(dbThroughput / 10, await GetDatabaseThroughput());
+            Assert.AreEqual(collectionThroughput / 10, await GetCollectionThroughput(collectionName));
 
-            dbThroughput = 1600;
-            collectionThroughput = 800;
+            dbThroughput = 16000;
+            collectionThroughput = 5000;
 
             await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
 
-            Assert.AreEqual(dbThroughput, await GetDatabaseThroughput());
-            Assert.AreEqual(collectionThroughput, await GetCollectionThroughput(collectionName));
+            Assert.AreEqual(dbThroughput / 10, await GetDatabaseThroughput());
+            Assert.AreEqual(collectionThroughput / 10, await GetCollectionThroughput(collectionName));
         }
 
         [TestCase(null, null, null, 400)]
-        [TestCase(600, null, 600, null)]
-        [TestCase(null, 600, null, 600)]
-        [TestCase(600, 600, 600, 600)]
-        [TestCase(600, 1000, 600, 1000)]
-        [TestCase(1000, 600, 1000, 600)]
+        [TestCase(6000, null, 600, null)]
+        [TestCase(null, 6000, null, 600)]
+        [TestCase(6000, 6000, 600, 600)]
+        [TestCase(6000, 10000, 600, 1000)]
+        [TestCase(10000, 6000, 1000, 600)]
         public async Task set_database_and_collection_throughput_when_database_has_not_been_created(int? dbThroughput, int? collectionThroughput, int? expectedDbThroughput, int? expectedCollectionThroughput)
         {
             var collectionName = "CollectionThroughput_" + Guid.NewGuid();
-
 
             var storageEngine = await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
 
@@ -123,10 +122,10 @@ namespace SimpleEventStore.CosmosDb.Tests
 
 
         [TestCase(null, 500, null)]
-        [TestCase(1000, 500, 1000)]
+        [TestCase(10000, 500, 1000)]
         public async Task set_database_and_collection_throughput_when_database_has_already_been_created(int? collectionThroughput, int? expectedDbThroughput, int? expectedCollectionThroughput)
         {
-            const int existingDbThroughput = 500;
+            const int existingDbThroughput = 5000;
             await CreateDatabase(existingDbThroughput);
             var collectionName = "CollectionThroughput_" + Guid.NewGuid();
 
@@ -139,7 +138,8 @@ namespace SimpleEventStore.CosmosDb.Tests
         private static async Task<IStorageEngine> InitialiseStorageEngine(string collectionName, int? collectionThroughput = null,
             int? dbThroughput = null)
         {
-            var storageEngine = await CosmosDbStorageEngineFactory.Create(collectionName, DatabaseName, x => {
+            var storageEngine = await CosmosDbStorageEngineFactory.Create(collectionName, DatabaseName, x =>
+            {
                 x.UseCollection(o => o.CollectionRequestUnits = collectionThroughput);
                 x.UseDatabase(o => o.DatabaseRequestUnits = dbThroughput);
             });
@@ -160,7 +160,7 @@ namespace SimpleEventStore.CosmosDb.Tests
 
         private Task CreateDatabase(int databaseRequestUnits)
         {
-            return client.CreateDatabaseIfNotExistsAsync(DatabaseName, databaseRequestUnits);
+            return client.CreateDatabaseIfNotExistsAsync(DatabaseName, ThroughputProperties.CreateAutoscaleThroughput(databaseRequestUnits));
         }
 
     }
