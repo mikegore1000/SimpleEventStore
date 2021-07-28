@@ -47,7 +47,6 @@ namespace SimpleEventStore.CosmosDb
             cancellationToken.ThrowIfCancellationRequested();
             await Task.WhenAll(
                 InitialiseStoredProcedure(),
-                SetDatabaseOfferThroughput(),
                 SetCollectionOfferThroughput()
             );
 
@@ -172,14 +171,6 @@ namespace SimpleEventStore.CosmosDb
             if (collectionOptions.CollectionRequestUnits != null)
             {
                 await _collection.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput((int)collectionOptions.CollectionRequestUnits));
-            }
-        }
-
-        private async Task SetDatabaseOfferThroughput()
-        {
-            if (_databaseOptions.DatabaseRequestUnits != null)
-            {
-                await _database.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput((int)_databaseOptions.DatabaseRequestUnits));
             }
         }
     }

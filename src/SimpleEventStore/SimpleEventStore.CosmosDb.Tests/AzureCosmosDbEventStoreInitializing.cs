@@ -38,10 +38,10 @@ namespace SimpleEventStore.CosmosDb.Tests
             var collectionResponse = await collection.ReadContainerAsync();
             var collectionProperties = collectionResponse.Resource;
 
-            var offer = await collection.ReadThroughputAsync();
+            var offer = await collection.ReadThroughputAsync(requestOptions: null);
 
             Assert.That(expectedStoredProcedure, Is.Not.Null);
-            Assert.That(offer, Is.EqualTo(TestConstants.RequestUnits / 10));
+            Assert.That(offer.Resource.AutoscaleMaxThroughput, Is.EqualTo(TestConstants.RequestUnits));
             Assert.That(collectionProperties.DefaultTimeToLive, Is.Null);
             Assert.That(collectionProperties.PartitionKeyPath, Is.EqualTo("/streamId"));
             Assert.That(collectionProperties.IndexingPolicy.IncludedPaths.Count, Is.EqualTo(1));
@@ -57,9 +57,9 @@ namespace SimpleEventStore.CosmosDb.Tests
             const int dbThroughput = 8000;
             var collectionName = "SharedCollection_" + Guid.NewGuid();
 
-            var storageEngine = await InitialiseStorageEngine(collectionName, dbThroughput: dbThroughput);
+            await InitialiseStorageEngine(collectionName, dbThroughput: dbThroughput);
 
-            Assert.AreEqual(dbThroughput / 10, await GetDatabaseThroughput());
+            Assert.AreEqual(dbThroughput, await GetDatabaseThroughput());
             Assert.AreEqual(null, await GetCollectionThroughput(collectionName));
         }
 
@@ -82,7 +82,6 @@ namespace SimpleEventStore.CosmosDb.Tests
             Assert.That(collectionProperties.DefaultTimeToLive, Is.EqualTo(ttl));
         }
 
-
         [Test]
         public async Task when_throughput_is_set_offer_is_updated()
         {
@@ -92,51 +91,49 @@ namespace SimpleEventStore.CosmosDb.Tests
 
             await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
 
-            Assert.AreEqual(dbThroughput / 10, await GetDatabaseThroughput());
-            Assert.AreEqual(collectionThroughput / 10, await GetCollectionThroughput(collectionName));
+            Assert.AreEqual(dbThroughput, await GetDatabaseThroughput());
+            Assert.AreEqual(collectionThroughput, await GetCollectionThroughput(collectionName));
 
-            dbThroughput = 16000;
-            collectionThroughput = 5000;
+            var collectionThroughput2 = 5000;
 
-            await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
+            await InitialiseStorageEngine(collectionName, collectionThroughput2, dbThroughput);
 
-            Assert.AreEqual(dbThroughput / 10, await GetDatabaseThroughput());
-            Assert.AreEqual(collectionThroughput / 10, await GetCollectionThroughput(collectionName));
+            Assert.AreEqual(dbThroughput, await GetDatabaseThroughput());
+            Assert.AreEqual(collectionThroughput2, await GetCollectionThroughput(collectionName));
         }
 
-        [TestCase(null, null, null, 400)]
-        [TestCase(6000, null, 600, null)]
-        [TestCase(null, 6000, null, 600)]
-        [TestCase(6000, 6000, 600, 600)]
-        [TestCase(6000, 10000, 600, 1000)]
-        [TestCase(10000, 6000, 1000, 600)]
+        [TestCase(null, null, null, null)]
+        [TestCase(6000, null, 6000, null)]
+        [TestCase(null, 6000, null, 6000)]
+        [TestCase(6000, 6000, 6000, 6000)]
+        [TestCase(6000, 10000, 6000, 10000)]
+        [TestCase(10000, 6000, 10000, 6000)]
         public async Task set_database_and_collection_throughput_when_database_has_not_been_created(int? dbThroughput, int? collectionThroughput, int? expectedDbThroughput, int? expectedCollectionThroughput)
         {
             var collectionName = "CollectionThroughput_" + Guid.NewGuid();
 
-            var storageEngine = await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
+            await InitialiseStorageEngine(collectionName, collectionThroughput, dbThroughput);
 
             Assert.AreEqual(expectedDbThroughput, await GetDatabaseThroughput());
             Assert.AreEqual(expectedCollectionThroughput, await GetCollectionThroughput(collectionName));
         }
 
 
-        [TestCase(null, 500, null)]
-        [TestCase(10000, 500, 1000)]
+        [TestCase(null, 5000, null)]
+        [TestCase(10000, 5000, 10000)]
         public async Task set_database_and_collection_throughput_when_database_has_already_been_created(int? collectionThroughput, int? expectedDbThroughput, int? expectedCollectionThroughput)
         {
             const int existingDbThroughput = 5000;
             await CreateDatabase(existingDbThroughput);
             var collectionName = "CollectionThroughput_" + Guid.NewGuid();
 
-            var storageEngine = await InitialiseStorageEngine(collectionName, collectionThroughput, null);
+            await InitialiseStorageEngine(collectionName, collectionThroughput, null);
 
             Assert.AreEqual(expectedDbThroughput, await GetDatabaseThroughput());
             Assert.AreEqual(expectedCollectionThroughput, await GetCollectionThroughput(collectionName));
         }
 
-        private static async Task<IStorageEngine> InitialiseStorageEngine(string collectionName, int? collectionThroughput = null,
-            int? dbThroughput = null)
+        private static async Task<IStorageEngine> InitialiseStorageEngine(string collectionName, int? collectionThroughput = null, int? dbThroughput = null)
         {
             var storageEngine = await CosmosDbStorageEngineFactory.Create(collectionName, DatabaseName, x =>
             {
@@ -147,15 +144,32 @@ namespace SimpleEventStore.CosmosDb.Tests
             return await storageEngine.Initialise();
         }
 
-        public Task<int?> GetCollectionThroughput(string collectionName)
+        public async Task<int?> GetCollectionThroughput(string collectionName)
         {
-            var collection = client.GetContainer(DatabaseName, collectionName);
-            return collection.ReadThroughputAsync();
+            try
+            {
+                var collection = client.GetContainer(DatabaseName, collectionName);
+                var autoscaleContainerThroughput = await collection.ReadThroughputAsync(requestOptions: null);
+                return autoscaleContainerThroughput.Resource.AutoscaleMaxThroughput;
+            }
+            catch (CosmosException e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
         }
 
-        public Task<int?> GetDatabaseThroughput()
+        public async Task<int?> GetDatabaseThroughput()
         {
-            return client.GetDatabase(DatabaseName).ReadThroughputAsync();
+            try
+            {
+                var database = client.GetDatabase(DatabaseName);
+                var autoscaleContainerThroughput = await database.ReadThroughputAsync(requestOptions: null);
+                return autoscaleContainerThroughput.Resource.AutoscaleMaxThroughput;
+            }
+            catch (CosmosException e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
         }
 
         private Task CreateDatabase(int databaseRequestUnits)
